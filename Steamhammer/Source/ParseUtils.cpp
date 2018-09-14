@@ -175,6 +175,7 @@ void ParseUtils::ParseConfigFile(const std::string & filename)
 		Config::Strategy::UsePlanRecognizer = GetBoolByRace("UsePlanRecognizer", strategy);
 		Config::Strategy::SurrenderWhenHopeIsLost = GetBoolByRace("SurrenderWhenHopeIsLost", strategy);
 		Config::Strategy::TrainingMode = GetBoolByRace("TrainingMode", strategy);
+		Config::Strategy::EnemyLurePylon = GetBoolByRace("EnemyLurePylon", strategy);
 
 		bool openingStrategyDecided = false;
 
