@@ -29,6 +29,7 @@ StrategyManager & StrategyManager::Instance()
 
 void StrategyManager::update()
 {
+	
     // Check if we should stop a rush
     if (_rushing)
     {
@@ -48,7 +49,7 @@ void StrategyManager::update()
             if (UnitUtil::IsTierOneCombatUnit(unit.second.type)) continue;
             nonTierOneCombatUnits++;
         }
-
+	
         if (flyingBuilding || nonTierOneCombatUnits >= 3 ||
             (BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Terran && nonTierOneCombatUnits > 0))
         {
@@ -98,7 +99,7 @@ const bool StrategyManager::shouldExpandNow() const
 	if (WorkerManager::Instance().getNumIdleWorkers() > 10
 		|| (numDepots * 18) < UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Probe))
 	{
-		return true;
+			return true;
 	}
 
 	return false;
@@ -270,7 +271,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
         goonRatio = 1.0;
 
         // We use dark templar primarily for harassment, so don't build too many of them
-        if (numDarkTemplar < 8) buildDarkTemplar = true;
+        if (numDarkTemplar < 4 && numDragoons <6) buildDarkTemplar = true;
     }
     else if (_openingGroup == "carriers")
     {
@@ -296,6 +297,11 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 		_openingGroup = "dragoons";    // we're misconfigured, but try to do something
 	}
 
+	if (InformationManager::Instance().getEnemyName() == "Locutus" || InformationManager::Instance().getEnemyName() == "locutus")
+	{
+		//if(numNexusCompleted >= 2)
+			//buildReaver = true;
+	}
     // Adjust ground unit ratios
     if (buildGround)
     {
@@ -581,10 +587,10 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 		// Observers have first priority
 		if (buildObserver
 			&& idleRoboFacilities > 0
-			&& numObservers < 3
+			&& numObservers < 5
 			&& self->completedUnitCount(BWAPI::UnitTypes::Protoss_Observatory) > 0)
 		{
-			int observersToBuild = std::min(idleRoboFacilities, 3 - numObservers);
+			int observersToBuild = std::min(idleRoboFacilities, 5 - numObservers);
 			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Observer, numObservers + observersToBuild));
 
 			idleRoboFacilities -= observersToBuild;
@@ -1288,8 +1294,9 @@ void StrategyManager::handleMacroProduction(BuildOrderQueue & queue)
         (mineralPatches < desiredMineralPatches || gasBlocked) &&
         !isRushing())
     {
+	
         // Double-check that there is actually a place to expand to
-        if (MapTools::Instance().getNextExpansion(false, true, false) != BWAPI::TilePositions::None)
+        if (MapTools::Instance().getNextExpansion(false, true, false) != BWAPI::TilePositions::None &&  (UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Gateway) >= UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Nexus) * 3 || UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Gateway) >= 10))
         {
             Log().Get() << "Expanding: " << mineralPatches << " active mineral patches, " << probes << " probes, " << UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Nexus) << " nexuses";
             if (WorkerManager::Instance().isCollectingGas())
@@ -1317,7 +1324,8 @@ void StrategyManager::handleMacroProduction(BuildOrderQueue & queue)
         if (idleNexus)
             queue.queueAsLowestPriority(BWAPI::UnitTypes::Protoss_Probe);
     }
-
+	if (InformationManager::Instance().enemyHasCloakedCombatUnits() && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Observer) < 1)
+		CombatCommander::Instance().setAggression(false);
     // If we are mining gas, make sure we've taken the geysers at our mining bases
     // They usually get ordered automatically, so don't do this too often unless we are gas blocked
     if ((gasBlocked || BWAPI::Broodwar->getFrameCount() % (10 * 24) == 0) &&
@@ -1349,6 +1357,7 @@ void StrategyManager::handleMacroProduction(BuildOrderQueue & queue)
             if (!nexus->isCompleted() &&
                 nexus->getRemainingBuildTime() > BWAPI::UnitTypes::Protoss_Assimilator.buildTime())
             {
+			
                 continue;
             }
 

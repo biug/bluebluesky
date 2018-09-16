@@ -1224,7 +1224,8 @@ void ProductionManager::goOutOfBookAndClearQueue()
 {
 	_queue.clearAll();
 	_outOfBook = true;
-	CombatCommander::Instance().setAggression(true);
+	if (!InformationManager::Instance().enemyHasCloakedCombatUnits() || BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Observer) >= 1)
+		CombatCommander::Instance().setAggression(true);
 	_lastProductionFrame = BWAPI::Broodwar->getFrameCount();
 }
 

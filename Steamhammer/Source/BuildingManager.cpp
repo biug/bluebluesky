@@ -776,7 +776,8 @@ BWAPI::TilePosition BuildingManager::getBuildingLocation(const Building & b)
 		}
 		if (b.macroLocation != MacroLocation::Macro)
 		{
-			return MapTools::Instance().getNextExpansion(b.macroLocation == MacroLocation::Hidden, true, b.macroLocation != MacroLocation::MinOnly);
+			//return MapTools::Instance().getNextExpansion(b.macroLocation == MacroLocation::Hidden, true, b.macroLocation != MacroLocation::MinOnly);
+			return MapTools::Instance().getNextExpansion(false, true, false);
 		}
 		// Else if it's a macro hatchery, treat it like any other building.
 	}

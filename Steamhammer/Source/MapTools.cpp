@@ -461,7 +461,8 @@ BWTA::BaseLocation * MapTools::nextExpansion(bool hidden, bool wantMinerals, boo
 		// More resources -> better.
 		if (wantMinerals)
 		{
-			score += 0.01 * base->minerals();
+			//Unnecessary
+			//score += 0.01 * base->minerals();
 		}
 		if (wantGas)
 		{

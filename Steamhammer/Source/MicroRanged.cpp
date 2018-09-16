@@ -126,7 +126,7 @@ void MicroRanged::assignTargets(const BWAPI::Unitset & targets)
 				}
 				else
 					it++;
-
+			
 			for (auto it = availableTilesOutside.begin(); it != availableTilesOutside.end(); )
 				if (it->first == rangedUnit->getTilePosition())
 				{
