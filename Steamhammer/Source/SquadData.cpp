@@ -169,6 +169,18 @@ void SquadData::assignUnitToSquad(BWAPI::Unit unit, Squad & squad)
 
     Squad * previousSquad = getUnitSquad(unit);
 
+	// Harass Dark Templar in enemy base don't change squad
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar)
+	{
+		if (previousSquad && previousSquad->getName().find("Harass") == 0)
+		{
+			auto enemyMain = InformationManager::Instance().getEnemyMainBaseLocation();
+			if (enemyMain && unit->getDistance(enemyMain->getPosition()) < 400) return;
+			auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation();
+			if (enemyNatural && unit->getDistance(enemyNatural->getPosition()) < 400) return;
+		}
+	}
+
     if (previousSquad)
     {
         previousSquad->removeUnit(unit);

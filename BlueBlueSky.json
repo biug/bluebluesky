@@ -91,6 +91,7 @@
 		"SurrenderWhenHopeIsLost"   : true,
 		"UsePlanRecognizer"         : true,
 		"TrainingMode"				: false,
+		"EnemyLurePylon" 			: false,
 
 		"PvT" :
 			{ "Protoss" : [

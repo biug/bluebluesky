@@ -202,6 +202,19 @@ void MicroManager::regroup(
     const BWAPI::Unit vanguard, 
     std::map<BWAPI::Unit, bool> & nearEnemy) const
 {
+	BWAPI::Position basePosition = (BWAPI::Position)BWAPI::Broodwar->self()->getStartLocation();
+	BWAPI::Position frontNonDTPosition = basePosition;
+	for (const auto unit : _units)
+	{
+		if (!InformationManager::Instance().getLocutusUnit(unit).isReady()) continue;
+
+		if (unit->getType() != BWAPI::UnitTypes::Protoss_Dark_Templar)
+		{
+			if (PathFinding::GetGroundDistance(frontNonDTPosition, basePosition) < PathFinding::GetGroundDistance(unit->getPosition(), basePosition))
+				frontNonDTPosition = unit->getPosition();
+		}
+	}
+
 	for (const auto unit : _units)
 	{
         if (!InformationManager::Instance().getLocutusUnit(unit).isReady()) continue;
@@ -210,8 +223,7 @@ void MicroManager::regroup(
         if (unstickStuckUnit(unit)) continue;
 
 		// 1. A broodling should never retreat, but attack as long as it lives.
-		// 2. If none of its kind has died yet, a dark templar or lurker should not retreat.
-		// 3. A ground unit next to an enemy sieged tank should not move away.
+		// 2. A ground unit next to an enemy sieged tank should not move away.
 		// TODO 4. A unit in stay-home mode should stay home, not "regroup" away from home.
 		// TODO 5. A unit whose retreat path is blocked by enemies should do something else, at least attack-move.
 		if (buildScarabOrInterceptor(unit))
@@ -219,10 +231,14 @@ void MicroManager::regroup(
 			// We're done for this frame.
             continue;
 		}
-		else if (unit->getType() == BWAPI::UnitTypes::Zerg_Broodling ||
-			unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar && BWAPI::Broodwar->self()->deadUnitCount(BWAPI::UnitTypes::Protoss_Dark_Templar) == 0 ||
-			unit->getType() == BWAPI::UnitTypes::Zerg_Lurker && BWAPI::Broodwar->self()->deadUnitCount(BWAPI::UnitTypes::Zerg_Lurker) == 0 ||
-			(BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Terran &&
+		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar)
+		{
+			if (PathFinding::GetGroundDistance(frontNonDTPosition, unit->getPosition()) < 320)
+				Micro::AttackMove(unit, unit->getPosition());
+			else
+				Micro::AttackMove(unit, frontNonDTPosition);
+		}
+		else if ((BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Terran &&
 			!unit->isFlying() &&
 			 BWAPI::Broodwar->getClosestUnit(unit->getPosition(),
 				BWAPI::Filter::IsEnemy && BWAPI::Filter::GetType == BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode,
