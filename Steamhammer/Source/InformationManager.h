@@ -38,6 +38,7 @@ class InformationManager
 	std::map<BWAPI::Player, UnitData>                   _unitData;
 	std::map<BWAPI::Player, BWTA::BaseLocation *>       _mainBaseLocations;
 	BWTA::BaseLocation *								_myNaturalBaseLocation;  // whether taken yet or not; may be null
+	BWTA::BaseLocation *								_enemyNaturalBaseLocation;
 	std::map<BWAPI::Player, std::set<BWTA::Region *> >  _occupiedRegions;        // contains any building
 	std::map<BWTA::BaseLocation *, Base *>				_theBases;
 	BWAPI::Unitset										_staticDefense;
@@ -127,6 +128,7 @@ public:
     BWTA::BaseLocation *    getMainBaseLocation(BWAPI::Player player);
 	BWTA::BaseLocation *	getMyMainBaseLocation();
 	BWTA::BaseLocation *	getEnemyMainBaseLocation();
+	BWTA::BaseLocation *	getEnemyNaturalBaseLocation();
 	const BWEB::Station *	getEnemyMainBaseStation();
 	BWAPI::Player			getBaseOwner(BWTA::BaseLocation * base);
 	int         			getBaseOwnedSince(BWTA::BaseLocation * base);
@@ -168,6 +170,7 @@ public:
 	bool					enemyHasMobileDetection();
 	bool					enemyHasSiegeTech();
     bool                    enemyHasInfantryRangeUpgrade();
+	bool					enemyBaseHasDetection(BWTA::BaseLocation* base);
 
     int                     getWeaponDamage(BWAPI::Player player, BWAPI::WeaponType wpn);
     int                     getWeaponRange(BWAPI::Player player, BWAPI::WeaponType wpn);

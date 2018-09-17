@@ -18,6 +18,8 @@ InformationManager::InformationManager()
     , _enemy(BWAPI::Broodwar->enemy())
 	, _enemyProxy(false)
 
+	, _enemyNaturalBaseLocation(nullptr)
+
 	, bulletsSeenAtExtendedMarineRange(0)
 	
 	, _weHaveCombatUnits(false)
@@ -477,6 +479,52 @@ void InformationManager::updateBaseLocationInfo()
 	else 
 	{
 		updateOccupiedRegions(BWTA::getRegion(_mainBaseLocations[_enemy]->getTilePosition()), _enemy);
+	}
+	if (_mainBaseLocations[_enemy])
+	{
+		// We'll go through the bases and pick the best one as the natural.
+		BWTA::BaseLocation * bestBase = nullptr;
+		double bestScore = 0.0;
+
+		BWAPI::TilePosition homeTile = _mainBaseLocations[_enemy]->getTilePosition();
+		BWAPI::Position enemyBasePosition(homeTile);
+
+		for (BWTA::BaseLocation * base : BWTA::getBaseLocations())
+		{
+			double score = 0.0;
+
+			BWAPI::TilePosition tile = base->getTilePosition();
+
+			// The main is not the natural.
+			if (tile == homeTile)
+			{
+				continue;
+			}
+
+			// Ww want to be close to our own base.
+			double distanceFromUs = MapTools::Instance().getGroundTileDistance(BWAPI::Position(tile), enemyBasePosition);
+
+			// If it is not connected, skip it. Islands do this.
+			if (!BWTA::isConnected(homeTile, tile) || distanceFromUs < 0)
+			{
+				continue;
+			}
+
+			// Add up the score.
+			score = -distanceFromUs;
+
+			// More resources -> better.
+			score += 0.01 * base->minerals() + 0.02 * base->gas();
+
+			if (!bestBase || score > bestScore)
+			{
+				bestBase = base;
+				bestScore = score;
+			}
+		}
+
+		// bestBase may be null on unusual maps.
+		_enemyNaturalBaseLocation = bestBase;
 	}
 
 	// The enemy occupies a region if it has a building there.
@@ -1036,6 +1084,11 @@ BWTA::BaseLocation * InformationManager::getMyMainBaseLocation()
 BWTA::BaseLocation * InformationManager::getEnemyMainBaseLocation()
 {
 	return _mainBaseLocations[_enemy];
+}
+
+BWTA::BaseLocation * InformationManager::getEnemyNaturalBaseLocation()
+{
+	return _enemyNaturalBaseLocation;
 }
 
 // Null until the enemy base is located.
@@ -2121,6 +2174,17 @@ bool InformationManager::enemyHasInfantryRangeUpgrade()
         return true;
     }
 
+	return false;
+}
+
+bool InformationManager::enemyBaseHasDetection(BWTA::BaseLocation* base)
+{
+	if (!base) return false;
+	auto enemyMainPos = base->getPosition();
+	for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
+		if (ui.second.type.isBuilding() && ui.second.type.isDetector() && !ui.second.goneFromLastPosition && ui.second.completed)
+			if (enemyMainPos.getApproxDistance(ui.second.lastPosition) < 368)
+				return true;
 	return false;
 }
 

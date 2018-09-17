@@ -289,10 +289,12 @@ void CombatCommander::updateHarassSquads()
         BWTA::BaseLocation* base = nullptr;
         for (auto & potentialBase : InformationManager::Instance().getEnemyBases())
             if (potentialBase->getRegion() == region)
-            {
-                base = potentialBase;
-                break;
-            }
+				// no detection in base
+				if (!InformationManager::Instance().enemyBaseHasDetection(potentialBase))
+				{
+					base = potentialBase;
+					break;
+				}
 
         // If the enemy doesn't have a base here, make sure the squad is cleared
         if (!base)
