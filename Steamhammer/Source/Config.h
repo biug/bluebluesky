@@ -41,6 +41,7 @@ namespace Config
         extern bool FoundEnemySpecificStrategy;
         extern bool FoundMapSpecificStrategy;
         extern bool TrainingMode;
+		extern bool EnemyLurePylon;
     }
 
     namespace BWAPIOptions

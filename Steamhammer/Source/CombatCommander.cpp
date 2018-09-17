@@ -2027,6 +2027,47 @@ int CombatCommander::numZerglingsInOurBase() const
 // Is an enemy building near our base? If so, we may pull workers.
 bool CombatCommander::buildingRush() const
 {
+	// Predict enemy lure pylon
+	auto enemyName = BWAPI::Broodwar->enemy()->getName();
+	if ((enemyName == "Locutus" || enemyName == "enemy") && BWAPI::Broodwar->getFrameCount() < 16 * 8 * 60)
+	{
+		auto mainPos = (BWAPI::Position)BWAPI::Broodwar->self()->getStartLocation();
+		// If a pylon around our base before 8min, maybe a lure pylon
+		for (auto & pylon : BWAPI::Broodwar->enemy()->getUnits())
+		{
+			if (pylon && pylon->getType() == BWAPI::UnitTypes::Protoss_Pylon)
+			{
+				auto pylonPos = pylon->getPosition();
+				if (pylonPos.getApproxDistance(mainPos) < 1200)
+				{
+					Config::Strategy::EnemyLurePylon = true;
+				}
+			}
+		}
+		// If a cannon around our base, must be cannon rush, not lure pylon
+		for (auto & cannon : BWAPI::Broodwar->enemy()->getUnits())
+		{
+			if (cannon && cannon->getType() == BWAPI::UnitTypes::Protoss_Photon_Cannon)
+			{
+				auto cannonPos = cannon->getPosition();
+				if (cannonPos.getApproxDistance(mainPos) < 1200)
+				{
+					Config::Strategy::EnemyLurePylon = false;
+				}
+			}
+		}
+	}
+	if (BWAPI::Broodwar->getFrameCount() > 16 * 8 * 60)
+	{
+		Config::Strategy::EnemyLurePylon = false;
+	}
+
+	// If they have a lure pylon
+	if (Config::Strategy::EnemyLurePylon)
+	{
+		return false;
+	}
+
 	// If we have units, there will be no need to pull workers.
 	if (InformationManager::Instance().weHaveCombatUnits())
 	{

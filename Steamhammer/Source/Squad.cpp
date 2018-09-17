@@ -242,9 +242,6 @@ void Squad::addUnitsToMicroManagers()
     BWAPI::Unitset darkTemplarUnits;
     BWAPI::Unitset highTemplarUnits;
 	BWAPI::Unitset transportUnits;
-	BWAPI::Unitset lurkerUnits;
-    BWAPI::Unitset tankUnits;
-    BWAPI::Unitset medicUnits;
 
 	for (const auto unit : _units)
 	{
@@ -269,19 +266,6 @@ void Squad::addUnitsToMicroManagers()
             {
                 carrierUnits.insert(unit);
             }
-			else if (unit->getType() == BWAPI::UnitTypes::Terran_Medic)
-            {
-                medicUnits.insert(unit);
-            }
-			else if (unit->getType() == BWAPI::UnitTypes::Zerg_Lurker)
-			{
-				lurkerUnits.insert(unit);
-			}
-			else if (unit->getType() == BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode ||
-				unit->getType() == BWAPI::UnitTypes::Terran_Siege_Tank_Tank_Mode)
-            {
-                tankUnits.insert(unit);
-            }   
 			else if (unit->getType().isDetector() && unit->getType().isFlyer())   // not a building
 			{
 				detectorUnits.insert(unit);
@@ -294,13 +278,14 @@ void Squad::addUnitsToMicroManagers()
 			}
 			// NOTE This excludes spellcasters.
 			else if ((unit->getType().groundWeapon().maxRange() > 32) ||
-				unit->getType() == BWAPI::UnitTypes::Zerg_Scourge ||
 				unit->getType() == BWAPI::UnitTypes::Protoss_Reaver)
 			{
 				rangedUnits.insert(unit);
 			}
 			else if (unit->getType().isWorker() && _combatSquad)
 			{
+				// If have a lure pylon, continue
+				if (Config::Strategy::EnemyLurePylon) continue;
 				// If this is a combat squad, then workers are melee units like any other,
 				// but we have to tell WorkerManager about them.
 				// If it's not a combat squad, WorkerManager owns them; don't add them to a micromanager.
@@ -867,10 +852,6 @@ const bool Squad::isOverlordHunterSquad() const
 			return false;
 		}
 		if (!type.isDetector() &&
-			type != BWAPI::UnitTypes::Terran_Wraith &&
-			type != BWAPI::UnitTypes::Terran_Valkyrie &&
-			type != BWAPI::UnitTypes::Zerg_Mutalisk &&
-			type != BWAPI::UnitTypes::Zerg_Scourge &&      // questionable, but the squad may have both
 			type != BWAPI::UnitTypes::Protoss_Corsair &&
 			type != BWAPI::UnitTypes::Protoss_Scout)
 		{
