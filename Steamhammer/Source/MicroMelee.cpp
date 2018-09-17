@@ -104,7 +104,7 @@ void MicroMelee::assignTargets(const BWAPI::Unitset & targets)
 				else
 				{
 					BWAPI::Position fleeTo(InformationManager::Instance().getMyMainBaseLocation()->getPosition());
-					Micro::Move(meleeUnit, fleeTo);
+					Micro::SmartMove(meleeUnit, fleeTo);
 				}
             }
 			else

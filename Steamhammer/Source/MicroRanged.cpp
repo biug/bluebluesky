@@ -150,7 +150,7 @@ void MicroRanged::assignTargets(const BWAPI::Unitset & targets)
 			if (availableTilesInside.begin()->second < (unit.second - 16))
 			{
 				// Move to the free tile
-				Micro::Move(unit.first, center(availableTilesInside.begin()->first));
+				Micro::SmartMove(unit.first, center(availableTilesInside.begin()->first));
 
 				// Remove the tile from the available set
 				availableTilesInside.erase(availableTilesInside.begin());
@@ -170,7 +170,7 @@ void MicroRanged::assignTargets(const BWAPI::Unitset & targets)
 			if (availableTilesOutside.begin()->second < (unit.second - 16))
 			{
 				// Move to the free tile
-				Micro::Move(unit.first, center(availableTilesOutside.begin()->first));
+				Micro::SmartMove(unit.first, center(availableTilesOutside.begin()->first));
 
 				// Remove the tile from the available set
 				availableTilesOutside.erase(availableTilesOutside.begin());
@@ -213,7 +213,7 @@ void MicroRanged::assignTargets(const BWAPI::Unitset & targets)
 				}
 				else
 				{
-					Micro::Move(rangedUnit, order.getPosition());
+					Micro::SmartMove(rangedUnit, order.getPosition());
 				}
 				continue;
 			}

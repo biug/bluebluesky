@@ -174,6 +174,77 @@ void Micro::Move(BWAPI::Unit attacker, const BWAPI::Position & targetPosition)
     }
 }
 
+void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPosition)
+{
+	if (!attacker || !attacker->exists() || attacker->getPlayer() != BWAPI::Broodwar->self() || !targetPosition.isValid())
+	{
+		// BBS_ASSERT(false, "bad arg");  // TODO restore this after the bugs are solved; can make too many beeps
+		return;
+	}
+
+	// if we have issued a command to this unit already this frame, ignore this one
+	if (attacker->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount())
+	{
+		return;
+	}
+
+	BWAPI::UnitCommand currentCommand(attacker->getLastCommand());
+
+	// if we've already told this unit to move to this position, ignore this command
+	if (!attacker->isStuck() &&
+		(currentCommand.getType() == BWAPI::UnitCommandTypes::Move) &&
+		(currentCommand.getTargetPosition() == targetPosition) &&
+		attacker->isMoving())
+	{
+		return;
+	}
+
+	// if nothing prevents it, move the target position
+	// move according to chokes
+	BWAPI::Broodwar->drawLineMap(attacker->getPosition(), targetPosition, BWAPI::Colors::Purple);
+	int len = -1;
+	const auto & path = BWEM::Map::Instance().GetPath(attacker->getPosition(), targetPosition, &len);
+	if (!attacker->isFlying() && len > 0 && path.size() > 0)
+	{
+		bool inChoke = false;
+		int nearestValidChoke = 0;
+		while (nearestValidChoke < path.size())
+		{
+			const auto & choke = path[nearestValidChoke];
+			BWAPI::Position end1 = (BWAPI::Position)choke->Pos(choke->end1);
+			BWAPI::Position end2 = (BWAPI::Position)choke->Pos(choke->end2);
+			BWAPI::Position middle = (BWAPI::Position)choke->Pos(choke->middle);
+			BWAPI::Position pos = attacker->getPosition();
+			if (pos.getDistance(end1) <= 96 || pos.getDistance(end2) <= 96 || pos.getDistance(middle) <= 96)
+			{
+				++nearestValidChoke;
+			}
+			else break;
+		}
+		if (nearestValidChoke == path.size())
+		{
+			attacker->move(targetPosition);
+		}
+		else
+		{
+			const auto & choke = path[nearestValidChoke];
+			attacker->move((BWAPI::Position)choke->Center());
+		}
+	}
+	else
+	{
+		attacker->move(targetPosition);
+	}
+	TotalCommands++;
+
+	if (Config::Debug::DrawUnitTargetInfo)
+	{
+		BWAPI::Broodwar->drawCircleMap(attacker->getPosition(), dotRadius, BWAPI::Colors::White, true);
+		BWAPI::Broodwar->drawCircleMap(targetPosition, dotRadius, BWAPI::Colors::White, true);
+		BWAPI::Broodwar->drawLineMap(attacker->getPosition(), targetPosition, BWAPI::Colors::White);
+	}
+}
+
 void Micro::RightClick(BWAPI::Unit unit, BWAPI::Unit target)
 {
 	if (!unit || !unit->exists() || unit->getPlayer() != BWAPI::Broodwar->self() ||
@@ -439,7 +510,7 @@ void Micro::KiteTarget(BWAPI::Unit rangedUnit, BWAPI::Unit target)
     {
         if (rangedUnit->getDistance(target) > 48)
         {
-            Micro::Move(rangedUnit, target->getPosition());
+            Micro::SmartMove(rangedUnit, target->getPosition());
             return;
         }
 

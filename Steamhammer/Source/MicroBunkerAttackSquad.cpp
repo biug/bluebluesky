@@ -556,7 +556,7 @@ void MicroBunkerAttackSquad::execute(BWAPI::Position orderPosition, bool squadIs
                 }
             }
 
-            Micro::Move(unit, unitToAssignedPosition[unit]);
+            Micro::SmartMove(unit, unitToAssignedPosition[unit]);
         }
 
         // Otherwise fire away
@@ -581,7 +581,7 @@ void MicroBunkerAttackSquad::attack(BWAPI::Unit unit)
     }
 
     // The bunker isn't visible, move towards it
-    Micro::Move(unit, _bunkerPosition);
+    Micro::SmartMove(unit, _bunkerPosition);
 }
 
 bool MicroBunkerAttackSquad::isPerformingRunBy(BWAPI::Unit unit) 
