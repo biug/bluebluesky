@@ -38,6 +38,7 @@ namespace Config
         bool FoundEnemySpecificStrategy     = false;
         bool FoundMapSpecificStrategy       = false;
         bool TrainingMode                   = false;
+		bool EnemyLurePylon					= false;
     }
 
     namespace BotInfo
