@@ -222,7 +222,7 @@ void MicroManager::regroup(
         // Units might get stuck while retreating
         if (unstickStuckUnit(unit)) continue;
 
-		// 1. A broodling should never retreat, but attack as long as it lives.
+		// 1. A non-detected DT should never retreat, but attack as long as it lives.
 		// 2. A ground unit next to an enemy sieged tank should not move away.
 		// TODO 4. A unit in stay-home mode should stay home, not "regroup" away from home.
 		// TODO 5. A unit whose retreat path is blocked by enemies should do something else, at least attack-move.
@@ -231,12 +231,13 @@ void MicroManager::regroup(
 			// We're done for this frame.
             continue;
 		}
-		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar)
+		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar && !unit->isDetected())
 		{
 			if (PathFinding::GetGroundDistance(frontNonDTPosition, unit->getPosition()) < 320)
 				Micro::AttackMove(unit, unit->getPosition());
 			else
 				Micro::AttackMove(unit, frontNonDTPosition);
+			continue;
 		}
 		else if ((BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Terran &&
 			!unit->isFlying() &&
@@ -258,8 +259,9 @@ void MicroManager::regroup(
 
         // Determine position to move towards
         // If we are a long way away from the vanguard unit and not near an enemy, move towards it
+		int safeRange = std::max(unit->getType().groundWeapon().maxRange() - 32, 32);
         BWAPI::Position regroupTo = 
-            (vanguard && !nearEnemy[unit] && (StrategyManager::Instance().isRushing() || vanguard->getDistance(unit) > 500 || !nearEnemy[vanguard]))
+            (vanguard && !nearEnemy[unit] && (StrategyManager::Instance().isRushing() || vanguard->getDistance(unit) > safeRange || !nearEnemy[vanguard]))
             ? vanguard->getPosition()
             : regroupPosition;
 

@@ -253,7 +253,10 @@ void LocutusUnit::moveToNextWaypoint()
         for (auto walkPosition : nextWaypoint->Geometry())
         {
             BWAPI::Position pos(walkPosition);
-            int dist = pos.getApproxDistance(next);
+			int dist = pos.getApproxDistance(next);
+			// if block, give some penalize
+			if (InformationManager::Instance().getMyUnitGrid().get(walkPosition) > 0)
+				dist += unit->getType().groundWeapon().maxRange() + 32;
             if (dist < bestDist)
             {
                 bestDist = dist;

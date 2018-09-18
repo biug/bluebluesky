@@ -227,8 +227,25 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 		}
 		else
 		{
+			int bestDist = INT_MAX;
 			const auto & choke = path[nearestValidChoke];
-			attacker->move((BWAPI::Position)choke->Center());
+			BWAPI::Position currentlyMovingTowards = (BWAPI::Position)choke->Pos(choke->middle);
+			for (auto walkPosition : choke->Geometry())
+			{
+				BWAPI::Position pos(walkPosition);
+				int dist = pos.getApproxDistance(targetPosition);
+				// if block, give some penalize
+				if (InformationManager::Instance().getMyUnitGrid().get(walkPosition) > 0)
+					dist += attacker->getType().groundWeapon().maxRange() + 32;
+				if (dist < bestDist)
+				{
+					bestDist = dist;
+					currentlyMovingTowards = pos;
+				}
+			}
+			// don't move too far away from center
+			currentlyMovingTowards = (currentlyMovingTowards + (BWAPI::Position)choke->Center()) / 2;
+			attacker->move(currentlyMovingTowards);
 		}
 	}
 	else
