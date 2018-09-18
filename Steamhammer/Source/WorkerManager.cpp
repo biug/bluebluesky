@@ -3,7 +3,7 @@
 #include "Micro.h"
 #include "ProductionManager.h"
 #include "UnitUtil.h"
-
+#include "OpponentModel.h"
 using namespace BlueBlueSky;
 
 WorkerManager::WorkerManager() 
@@ -52,6 +52,26 @@ void WorkerManager::updateWorkerStatus()
 		{
 			continue;     // the worker list includes drones in the egg
 		}
+		/*
+		int closetCannon = 99999;
+		for (auto & cannon : BWAPI::Broodwar->self()->getUnits())
+		{
+			if (cannon->getType() == BWAPI::UnitTypes::Protoss_Photon_Cannon)
+			{
+				if (worker->getDistance(cannon) < closetCannon)
+				{
+					closetCannon = worker->getDistance(cannon);
+					BWAPI::Broodwar->printf("%d", closetCannon);
+				}
+			}
+		}
+		if (closetCannon != 99999 && closetCannon > 7 * 32 && OpponentModel::Instance().getEnemyPlan() == OpeningPlan::ProxyGateway && findEnemyTargetForWorker(worker))
+		{
+
+			BWAPI::Broodwar->printf("2222223232323");
+			workerData.setWorkerJob(worker, WorkerData::Minerals, getClosestNonFullDepot(worker));
+			return;
+		}*/
 
 		// TODO temporary debugging - see Micro::Move
 		// BBS_ASSERT(UnitUtil::IsValidUnit(worker), "bad worker");
@@ -330,7 +350,7 @@ BWAPI::Unit WorkerManager::findEnemyTargetForWorker(BWAPI::Unit worker) const
     BBS_ASSERT(worker, "Worker was null");
 
 	BWAPI::Unit closestUnit = nullptr;
-	int closestDist = 65;         // ignore anything farther away
+	int closestDist = 50;         // ignore anything farther away
 
 	for (const auto unit : BWAPI::Broodwar->enemy()->getUnits())
 	{
@@ -395,7 +415,7 @@ bool WorkerManager::defendSelf(BWAPI::Unit worker, BWAPI::Unit resource)
 
 		// TODO It's not helping. Reaction time is too slow.
 		flee = false;
-
+		
 		if (flee)
 		{
 			// 1. We're in danger of dying. Flee by mineral walk.
@@ -413,7 +433,8 @@ bool WorkerManager::defendSelf(BWAPI::Unit worker, BWAPI::Unit resource)
 		}
 
 		// 2. We do not want to or are not able to run away. Fight.
-		Micro::AttackUnit(worker, target);
+		//if(BWAPI::Broodwar->self()->completedUnitCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) < 1)
+			Micro::AttackUnit(worker, target);
 		return true;
 	}
 

@@ -3,7 +3,7 @@
 #include "InformationManager.h"
 #include "ScoutManager.h"
 #include "PlayerSnapshot.h"
-
+#include "WorkerManager.h"
 using namespace BlueBlueSky;
 
 // Attempt to recognize what the opponent is doing, so we can cope with it.
@@ -124,16 +124,23 @@ void OpponentPlan::recognize()
 	// Recognize fast rushes.
 	if (snap.getFrame(BWAPI::UnitTypes::Zerg_Spawning_Pool) < 1600 ||
 		snap.getFrame(BWAPI::UnitTypes::Zerg_Zergling) < 3200 ||
-		snap.getFrame(BWAPI::UnitTypes::Protoss_Gateway) < 1750 ||
-		snap.getFrame(BWAPI::UnitTypes::Protoss_Zealot) < 3300 ||
 		snap.getFrame(BWAPI::UnitTypes::Terran_Barracks) < 1400 ||
-		snap.getFrame(BWAPI::UnitTypes::Terran_Marine) < 3000)
+		snap.getFrame(BWAPI::UnitTypes::Terran_Marine) < 3000 )
 	{
 		_openingPlan = OpeningPlan::FastRush;
 		_planIsFixed = true;
 		return;
 	}
-
+	
+	// Recognize proxy gateway
+	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Pylon) < 2000 || snap.getFrame(BWAPI::UnitTypes::Protoss_Gateway) < 1750 ||
+		snap.getFrame(BWAPI::UnitTypes::Protoss_Zealot) < 3300 || 
+		(BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Nexus) == 1 && BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) < 1 && BWAPI::Broodwar->getFrameCount() > 2800))
+	{
+		_openingPlan = OpeningPlan::ProxyGateway;
+		_planIsFixed = true;
+		WorkerManager::Instance().setCollectGas(false);
+	}
 	// Plans below here are slow plans. Do not overwrite a fast plan with a slow plan.
 	if (fastPlan(_openingPlan))
 	{

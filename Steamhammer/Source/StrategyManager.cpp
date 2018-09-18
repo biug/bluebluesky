@@ -29,7 +29,6 @@ StrategyManager & StrategyManager::Instance()
 
 void StrategyManager::update()
 {
-	
     // Check if we should stop a rush
     if (_rushing)
     {
@@ -271,7 +270,8 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
         goonRatio = 1.0;
 
         // We use dark templar primarily for harassment, so don't build too many of them
-        if (numDarkTemplar < 4 && numDragoons <6) buildDarkTemplar = true;
+		if ((numDarkTemplar < 4 && !InformationManager::Instance().enemyHasMobileDetection() && _enemyRace == BWAPI::Races::Protoss)
+			|| (_enemyRace != BWAPI::Races::Protoss && numDarkTemplar < 8)) buildDarkTemplar = true;
     }
     else if (_openingGroup == "carriers")
     {
@@ -961,6 +961,12 @@ void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
 			_openingStaticDefenseDropped = true;
 		}
 	}
+	//If enemy uses ProxyGateway,ensure at least 2 cannons at base
+	if (enemyPlan == OpeningPlan::ProxyGateway && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) < 5 && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon) < 4 && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dark_Templar) < 1)
+	{
+		int needMoreCannon = BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Zealot) + BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon) - BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Zealot) - BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon);
+		EnsureCannonsAtBase(InformationManager::Instance().getMyMainBaseLocation(), 2 + needMoreCannon/3, queue);
+	}
 
 	// Count resource depots.
 	const BWAPI::UnitType resourceDepotType = BWAPI::UnitTypes::Protoss_Nexus;
@@ -1130,7 +1136,7 @@ void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
             else
                 cannons = 2;
 
-            break;
+			break;
 
         case OpeningPlan::HeavyRush:
             // Heavy rushes ramp up to four cannons at a bit slower timing
@@ -1205,7 +1211,6 @@ void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
                     cannons = 1;
             }
         }
-
         SetWallCannons(queue, cannons);
     }
 

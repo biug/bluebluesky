@@ -5,6 +5,7 @@
 #include "Random.h"
 #include "UnitUtil.h"
 #include "PathFinding.h"
+#include "OpponentPlan.h"
 
 using namespace BlueBlueSky;
 
@@ -749,7 +750,11 @@ void CombatCommander::updateAttackSquads()
             defendPosition = wall.gapCenter;
             radius /= 4;
         }
-
+		//If enemy uses ProxyGateway,keep our army at mainbase
+		else if (OpponentModel::Instance().getEnemyPlan() == OpeningPlan::ProxyGateway)
+		{
+			defendPosition = base->getPosition();
+		}
         // If we have taken the natural, defend it
         else if (natural && BWAPI::Broodwar->self() == InformationManager::Instance().getBaseOwner(natural))
         {
@@ -1387,10 +1392,10 @@ void CombatCommander::updateDefenseSquadUnits(Squad & defenseSquad, const size_t
 		if (defenderToAdd->getType().isWorker())
 		{
 			BBS_ASSERT(pullWorkers, "pulled worker defender mistakenly");
-
             // Don't take the worker if we already have enough
             if (groundDefendersNeeded <= groundDefendersAdded) break;
-
+			// Don't take the worker if we already have cannon
+			if (OpponentModel::Instance().getEnemyPlan() == OpeningPlan::ProxyGateway && BWAPI::Broodwar->self()->completedUnitCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) > 1) break;
 			WorkerManager::Instance().setCombatWorker(defenderToAdd);
 			++groundDefendersAdded;
 
