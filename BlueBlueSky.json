@@ -103,10 +103,10 @@
 
 		"PvP" :
 			{ "Protoss" : [
-				{ "Weight" : 0, "Strategy" : "Proxy9-9Gate" },
-				{ "Weight" : 0, "Strategy" : "4GateGoon" },
-				{ "Weight" : 10, "Strategy" : "2GateDT" },
-				{ "Weight" : 0, "Strategy" : "12Nexus5ZealotFECannons" }
+				{ "Weight" : 5, "Strategy" : "Proxy9-9Gate" },
+				{ "Weight" : 45, "Strategy" : "4GateGoon" },
+				{ "Weight" : 45, "Strategy" : "2GateDT" },
+				{ "Weight" : 5, "Strategy" : "12Nexus5ZealotFECannons" }
 			]},
 			
 		"PvZ" :
@@ -184,7 +184,15 @@
         "EnemySpecificStrategy" :
         {
 			
-			"locutusprevious": "4GateGoon"
+			"locutusprevious": "4GateGoon",
+			"PurpleWave": { "Protoss" : [
+				{ "Weight" : 90, "Strategy" : "ForgeExpand5GateGoon" },
+				{ "Weight" : 10, "Strategy" : "4GateGoon" }
+			]},
+			"ISAMind": { "Protoss" : [
+				{ "Weight" : 90, "Strategy" : "ForgeExpand5GateGoon" },
+				{ "Weight" : 10, "Strategy" : "10-15GateGoon" }
+			]}
 		},
 		
 		"StrategyCombos" : {},
