@@ -510,7 +510,7 @@ void Micro::KiteTarget(BWAPI::Unit rangedUnit, BWAPI::Unit target)
     {
         if (rangedUnit->getDistance(target) > 48)
         {
-            Micro::SmartMove(rangedUnit, target->getPosition());
+            Micro::Move(rangedUnit, target->getPosition());
             return;
         }
 

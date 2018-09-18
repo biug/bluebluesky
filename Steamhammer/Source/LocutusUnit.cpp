@@ -100,8 +100,21 @@ bool LocutusUnit::moveTo(BWAPI::Position position, bool avoidNarrowChokes)
         //if (avoidNarrowChokes && ((ChokeData*)chokepoint->Ext())->width < 96)
         //    bwemPathNarrow = true;
 
+		// If too close to choke, skip this one
+		bool closeToChoke = false;
+		for (const auto & pos : chokepoint->Geometry())
+		{
+			if (unit->getDistance((BWAPI::Position)pos) < 64)
+			{
+				closeToChoke = true;
+				break;
+			}
+		}
         // Push the waypoints on this pass on the assumption that we can use them
-        waypoints.push_back(chokepoint);
+		if (!closeToChoke)
+		{
+			waypoints.push_back(chokepoint);
+		}
     }
 
     // Attempt to generate an alternate path if possible
@@ -247,6 +260,8 @@ void LocutusUnit::moveToNextWaypoint()
                 currentlyMovingTowards = pos;
             }
         }
+		// don't move too far away from center
+		currentlyMovingTowards = (currentlyMovingTowards + (BWAPI::Position)nextWaypoint->Center()) / 2;
     }
 
     Micro::Move(unit, currentlyMovingTowards);
