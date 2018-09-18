@@ -152,6 +152,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 
 	// These counts include uncompleted units.
 	int numPylons = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Pylon);
+	int numAssimilatorsCompleted = BWAPI::Broodwar->self()->completedUnitCount(BWAPI::UnitTypes::Protoss_Assimilator);
 	int numNexusCompleted = BWAPI::Broodwar->self()->completedUnitCount(BWAPI::UnitTypes::Protoss_Nexus);
 	int numNexusAll = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Nexus);
 	int numCannon = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Photon_Cannon);
@@ -159,9 +160,11 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	int numZealots = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Zealot);
 	int numDragoons = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Dragoon);
 	int numDarkTemplar = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Dark_Templar);
+	int numHighTemplar = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_High_Templar);
 	int numReavers = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Reaver);
 	int numCorsairs = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Corsair);
 	int numCarriers = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Carrier);
+	int numShuttle = UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Shuttle);
 
 	bool hasStargate = UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Stargate) > 0;
 
@@ -174,6 +177,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	int idleRoboFacilities = 0;
 	int idleForges = 0;
 	int idleCyberCores = 0;
+	int idleArchives = 0;
     bool gatewaysAreAtProxy = true;
 	for (const auto unit : BWAPI::Broodwar->self()->getUnits())
 		if (unit->isCompleted()
@@ -203,7 +207,10 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 				idleForges++;
 			else if (unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core
 				&& unit->getRemainingUpgradeTime() < 12)
-                idleCyberCores++;
+				idleCyberCores++;
+			else if (unit->getType() == BWAPI::UnitTypes::Protoss_Templar_Archives
+				&& unit->getRemainingResearchTime() < 12)
+				idleArchives++;
 		}
 
     double gatewaySaturation = getProductionSaturation(BWAPI::UnitTypes::Protoss_Gateway);
@@ -240,6 +247,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
     bool getCarrierCapacity = false;
 	bool buildDarkTemplar = false;
 	bool buildReaver = false;
+	bool buildHighTemplar = false;
 	bool buildObserver = InformationManager::Instance().enemyHasMobileCloakTech(); // Really cloaked combat units
 	double zealotRatio = 0.0;
 	double goonRatio = 0.0;
@@ -381,6 +389,9 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	// Build reavers when we have 2 or more bases
 	// Disabled until we can micro reavers better
 	//if (numNexusAll >= 2) buildReaver = true;
+
+	// Build high templar when we have 3 or more gas bases
+	if (numAssimilatorsCompleted >= 3 && _enemyRace == BWAPI::Races::Protoss && numHighTemplar < 2) buildHighTemplar = true;
 
 	if (getGoonRange)
 	{
@@ -531,6 +542,46 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 		{
 			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Dark_Templar, numDarkTemplar + 1));
 			idleGateways--;
+		}
+	}
+
+	if (buildHighTemplar)
+	{
+		if (!startedCyberCore) goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1));
+
+		if (!startedRoboBay
+			&& UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) > 0)
+			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Robotics_Facility, 1));
+
+		if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) > 0
+			&& !startedCitadel)
+			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, 1));
+
+		if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) > 0
+			&& !startedTemplarArchives)
+			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Templar_Archives, 1));
+
+		if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Templar_Archives) > 0)
+		{
+			if (idleGateways > 0)
+			{
+				goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_High_Templar, numHighTemplar + 1));
+				idleGateways--;
+			}
+			if (idleArchives > 0)
+			{
+				goal.push_back(MetaPair(BWAPI::TechTypes::Psionic_Storm, 1));
+				idleArchives--;
+			}
+		}
+
+		if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Robotics_Facility))
+		{
+			if (idleRoboFacilities > 0)
+			{
+				goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Shuttle, 1));
+				idleRoboFacilities--;
+			}
 		}
 	}
 
