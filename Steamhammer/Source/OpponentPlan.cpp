@@ -135,7 +135,7 @@ void OpponentPlan::recognize()
 	// Recognize proxy gateway
 	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Pylon) < 2000 || snap.getFrame(BWAPI::UnitTypes::Protoss_Gateway) < 1750 ||
 		snap.getFrame(BWAPI::UnitTypes::Protoss_Zealot) < 3300 || 
-		(BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Nexus) == 1 && BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) < 1 && BWAPI::Broodwar->getFrameCount() > 2800))
+		(snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) < 10000 && BWAPI::Broodwar->getFrameCount() > snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) + 300 && snap.getFrame(BWAPI::UnitTypes::Protoss_Gateway) > 10000))
 	{
 		_openingPlan = OpeningPlan::ProxyGateway;
 		_planIsFixed = true;
