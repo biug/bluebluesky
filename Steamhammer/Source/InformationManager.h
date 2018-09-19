@@ -90,6 +90,7 @@ class InformationManager
 	void                    updateOccupiedRegions(BWTA::Region * region, BWAPI::Player player);
 	void					updateGoneFromLastPosition();
     void                    updateBullets();
+	void					updateEnemyStatInfo();
 
     void                    detectEnemyWall(BWAPI::Unit unit);
     void                    detectBrokenEnemyWall(BWAPI::UnitType type, BWAPI::TilePosition tile);

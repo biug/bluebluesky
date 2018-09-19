@@ -780,6 +780,37 @@ void InformationManager::updateBullets()
     }
 }
 
+void InformationManager::updateEnemyStatInfo()
+{
+	if (BWAPI::Broodwar->getFrameCount() < 16 * 8 * 60)
+	{
+		int enemyInOurMain = 0;
+		auto mainArea = BWEM::Map::Instance().GetArea(BWAPI::Broodwar->self()->getStartLocation());
+
+		for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
+			if (ui.second.type.isBuilding() && !ui.second.goneFromLastPosition)
+				if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)ui.second.lastPosition) == mainArea)
+					if (ui.second.type == BWAPI::UnitTypes::Terran_Bunker || ui.second.type == BWAPI::UnitTypes::Protoss_Photon_Cannon || ui.second.type == BWAPI::UnitTypes::Zerg_Sunken_Colony)
+						enemyInOurMain++;
+
+		int workerInOurMain = 0;
+		for (auto & unit : BWAPI::Broodwar->enemy()->getUnits())
+			if (unit && unit->isVisible() && BWEM::Map::Instance().GetArea(unit->getTilePosition()) == mainArea)
+			{
+				if (unit->getType().isWorker()) workerInOurMain++;
+				else if (unit->canAttack()) enemyInOurMain++;
+			}
+
+		// less worker, no staitc, must be lure
+		if (workerInOurMain <= 2 && enemyInOurMain == 0)
+			Config::Strategy::EnemyScoutNotRush = true;
+	}
+	if (BWAPI::Broodwar->getFrameCount() > 16 * 8 * 60)
+	{
+		Config::Strategy::EnemyScoutNotRush = false;
+	}
+}
+
 bool trace(BWAPI::TilePosition tile, BWAPI::TilePosition wallTile, int direction, std::set<BWAPI::TilePosition> & wallTiles)
 {
     Log().Debug() << "Wall tracing from " << tile << "; wall " << wallTile << "; direction=" << direction;

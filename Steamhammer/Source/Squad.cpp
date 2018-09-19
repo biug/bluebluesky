@@ -284,8 +284,8 @@ void Squad::addUnitsToMicroManagers()
 			}
 			else if (unit->getType().isWorker() && _combatSquad)
 			{
-				// If have a lure pylon, continue
-				if (Config::Strategy::EnemyLurePylon) continue;
+				// If a lure, continue
+				if (Config::Strategy::EnemyScoutNotRush) continue;
 				// If this is a combat squad, then workers are melee units like any other,
 				// but we have to tell WorkerManager about them.
 				// If it's not a combat squad, WorkerManager owns them; don't add them to a micromanager.
