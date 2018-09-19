@@ -209,7 +209,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 				&& unit->getRemainingUpgradeTime() < 12)
 				idleCyberCores++;
 			else if (unit->getType() == BWAPI::UnitTypes::Protoss_Templar_Archives
-				&& unit->getRemainingResearchTime() < 12)
+				&& !unit->isResearching())
 				idleArchives++;
 		}
 
@@ -391,7 +391,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	//if (numNexusAll >= 2) buildReaver = true;
 
 	// Build high templar when we have 3 or more gas bases
-	if (numAssimilatorsCompleted >= 3 && _enemyRace == BWAPI::Races::Protoss && numHighTemplar < 2) buildHighTemplar = true;
+	if (numAssimilatorsCompleted >= 3 && _enemyRace == BWAPI::Races::Protoss && numHighTemplar < 4) buildHighTemplar = true;
 
 	if (getGoonRange)
 	{
@@ -568,22 +568,26 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 				goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_High_Templar, numHighTemplar + 1));
 				idleGateways--;
 			}
-			if (idleArchives > 0)
-			{
-				goal.push_back(MetaPair(BWAPI::TechTypes::Psionic_Storm, 1));
-				idleArchives--;
-			}
-		}
-
-		if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Robotics_Facility))
-		{
-			if (idleRoboFacilities > 0)
-			{
-				goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Shuttle, 1));
-				idleRoboFacilities--;
-			}
 		}
 	}
+	// don't use psionic, just merge
+	//if (buildHighTemplar || numHighTemplar > 0)
+	//{
+	//	if (idleArchives > 0)
+	//	{
+	//		goal.push_back(MetaPair(BWAPI::TechTypes::Psionic_Storm, 1));
+	//		idleArchives--;
+	//	}
+
+	//	if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Robotics_Facility))
+	//	{
+	//		if (idleRoboFacilities > 0)
+	//		{
+	//			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Shuttle, 1));
+	//			idleRoboFacilities--;
+	//		}
+	//	}
+	//}
 
 	// Normal gateway units
 	if (buildGround && idleGateways > 0)

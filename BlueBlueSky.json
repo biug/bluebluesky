@@ -192,6 +192,9 @@
 			"ISAMind": { "Protoss" : [
 				{ "Weight" : 90, "Strategy" : "ForgeExpand5GateGoon" },
 				{ "Weight" : 10, "Strategy" : "10-15GateGoon" }
+			]},
+			"UAlbertaBot": { "Protoss" : [
+				{ "Weight" : 90, "Strategy" : "ForgeExpand5GateGoon" }
 			]}
 		},
 		
