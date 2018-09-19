@@ -363,6 +363,7 @@ void GameCommander::setScoutUnits()
 {
 	// If we're zerg, assign the first overlord to scout.
 	// But not if the enemy is terran: We have no evasion skills, we'll lose the overlord.
+	
 	if (BWAPI::Broodwar->getFrameCount() == 0 &&
 		BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Zerg &&
 		BWAPI::Broodwar->enemy()->getRace() != BWAPI::Races::Terran)
@@ -472,7 +473,8 @@ BWAPI::Unit GameCommander::getScoutWorker()
 			WorkerManager::Instance().isFree(unit) &&
 			!unit->isCarryingMinerals() &&
 			!unit->isCarryingGas() &&
-			unit->getOrder() != BWAPI::Orders::MiningMinerals)
+			unit->getOrder() != BWAPI::Orders::MiningMinerals &&
+			unit != WorkerManager::Instance().getProxyWorker())
 		{
             int dist = PathFinding::GetGroundDistance(unit->getPosition(), mapCenter);
 			if (dist < bestDist)

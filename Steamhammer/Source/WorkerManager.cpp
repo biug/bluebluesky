@@ -4,11 +4,16 @@
 #include "ProductionManager.h"
 #include "UnitUtil.h"
 #include "OpponentModel.h"
+#include "PathFinding.h"
+#include "MapTools.h"
+#include "ScoutManager.h"
+
 using namespace BlueBlueSky;
 
 WorkerManager::WorkerManager() 
 	: previousClosestWorker(nullptr)
 	, _collectGas(true)
+	, proxyWorker(nullptr)
 {
 }
 
@@ -29,10 +34,9 @@ void WorkerManager::update()
 	handleMoveWorkers();
 	handleRepairWorkers();
 	handleMineralLocking(); // Do this last since the workers might get reassigned elsewhere first
-
+	handleProxyWorker();
 	drawResourceDebugInfo();
 	drawWorkerInformation(450,20);
-
 	workerData.drawDepotDebugInfo();
 }
 
@@ -262,7 +266,7 @@ void WorkerManager::handleIdleWorkers()
 	for (const auto worker : workerData.getWorkers())
 	{
         BBS_ASSERT(worker, "Worker was null");
-
+		if (worker == proxyWorker) continue;
 		if (workerData.getWorkerJob(worker) == WorkerData::Idle) 
 		{
 			if (worker->isCarryingMinerals() || worker->isCarryingGas())
@@ -669,12 +673,17 @@ BWAPI::Unit WorkerManager::getBuilder(const Building & b, bool setJobAsBuilder)
 	BWAPI::Unit closestMiningWorker = nullptr;
 	int closestMovingWorkerDistance = 0;
 	int closestMiningWorkerDistance = 0;
-
+	if (WorkerManager::Instance().getProxyWorker() && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) < 2)
+	{
+		workerData.setWorkerJob(WorkerManager::Instance().getProxyWorker(), WorkerData::Build, b.type);
+		return WorkerManager::Instance().getProxyWorker();
+	}
 	// look through each worker that had moved there first
 	for (const auto unit : workerData.getWorkers())
 	{
         BBS_ASSERT(unit, "Unit was null");
 
+		
         // gas steal building uses scout worker
         if (b.isWorkerScoutBuilding && (workerData.getWorkerJob(unit) == WorkerData::Scout))
         {
@@ -1038,4 +1047,25 @@ bool WorkerManager::maybeMineMineralBlocks(BWAPI::Unit worker)
 	}
 
 	return false;
+}
+
+void WorkerManager::handleProxyWorker()
+{
+	if (BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) > 1)
+	{
+		proxyWorker = nullptr;
+	}
+	auto & bwebMap = BWEB::Map::Instance();
+	
+	if (Config::Strategy::StrategyName != "Proxy9-9Gate") return;
+	if (BWAPI::Broodwar->self()->completedUnitCount(BWAPI::UnitTypes::Protoss_Probe) == 5 && getProxyWorker() == nullptr && BWAPI::Broodwar->getFrameCount() < 500)
+	{
+		// Gather the possible enemy start locations
+		for (const auto worker : workerData.getWorkers())
+		{
+			setMoveWorker(worker, 0, 0, BWAPI::Position(bwebMap.mapBWEM.Center().x, bwebMap.mapBWEM.Center().y));
+			proxyWorker = worker;
+			break;
+		}
+	}
 }

@@ -361,7 +361,8 @@ void ProductionManager::manageBuildOrderQueue()
 			// predict the worker movement to that building location
 			// NOTE If the worker is set moving, this sets flag _movingToThisBuildingLocation = true
 			//      so that we don't 
-			predictWorkerMovement(b);
+			if(!WorkerManager::Instance().getProxyWorker())
+				predictWorkerMovement(b);
 			break;
 		}
 
