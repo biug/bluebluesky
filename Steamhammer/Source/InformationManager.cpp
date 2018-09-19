@@ -276,6 +276,7 @@ void InformationManager::update()
 	updateTheBases();
 	updateGoneFromLastPosition();
     updateBullets();
+	updateEnemyStatInfo();
 
     // Output unit info for debugging micro
     return;
@@ -784,25 +785,26 @@ void InformationManager::updateEnemyStatInfo()
 {
 	if (BWAPI::Broodwar->getFrameCount() < 16 * 8 * 60)
 	{
-		int enemyInOurMain = 0;
+		int enemyInOurMain1 = 0, enemyInOurMain2 = 0;
 		auto mainArea = BWEM::Map::Instance().GetArea(BWAPI::Broodwar->self()->getStartLocation());
 
 		for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
 			if (ui.second.type.isBuilding() && !ui.second.goneFromLastPosition)
 				if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)ui.second.lastPosition) == mainArea)
 					if (ui.second.type == BWAPI::UnitTypes::Terran_Bunker || ui.second.type == BWAPI::UnitTypes::Protoss_Photon_Cannon || ui.second.type == BWAPI::UnitTypes::Zerg_Sunken_Colony)
-						enemyInOurMain++;
+						enemyInOurMain1++;
 
 		int workerInOurMain = 0;
 		for (auto & unit : BWAPI::Broodwar->enemy()->getUnits())
-			if (unit && unit->isVisible() && BWEM::Map::Instance().GetArea(unit->getTilePosition()) == mainArea)
+			if (unit && unit->getType() != BWAPI::UnitTypes::Unknown && unit->isVisible() && BWEM::Map::Instance().GetArea(unit->getTilePosition()) == mainArea)
 			{
 				if (unit->getType().isWorker()) workerInOurMain++;
-				else if (unit->canAttack()) enemyInOurMain++;
+				else if (unit->canAttack()) enemyInOurMain2++;
 			}
 
 		// less worker, no staitc, must be lure
-		if (workerInOurMain <= 2 && enemyInOurMain == 0)
+		BWAPI::Broodwar->drawTextScreen(50, 50, "worker: %d, enemy1: %d, enemy2: %d", workerInOurMain, enemyInOurMain1, enemyInOurMain2);
+		if (workerInOurMain <= 2 && enemyInOurMain1 + enemyInOurMain2 == 0)
 			Config::Strategy::EnemyScoutNotRush = true;
 	}
 	if (BWAPI::Broodwar->getFrameCount() > 16 * 8 * 60)
