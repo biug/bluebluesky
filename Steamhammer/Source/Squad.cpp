@@ -361,7 +361,7 @@ bool Squad::needsToRegroup()
 	const int retreatDuration = 2 * 24;
 	bool retreat = _lastRetreatSwitchVal && (BWAPI::Broodwar->getFrameCount() - _lastRetreatSwitch < retreatDuration);
 
-	if (!retreat)
+	if (!retreat && Config::Strategy::StrategyName != "Proxy9-9Gate")
 	{
         // All other checks are done. Finally do the expensive combat simulation.
         int score = runCombatSim(_order.getPosition());

@@ -223,6 +223,17 @@ void ScoutManager::update()
 		releaseWorkerScout();
 	}
 
+	// If use a proxy-gate opening, don't scout too long
+	if (Config::Strategy::StrategyName == "Proxy9-9Gate")
+	{
+		PlayerSnapshot snap;
+		snap.takeEnemy();
+		if (snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) < 10000 && BWAPI::Broodwar->getFrameCount() - snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) > 300)
+		{
+			releaseWorkerScout();
+		}
+	}
+
     // Calculate waypoints around the enemy base if we expect to need them.
 	// We use these to go directly to the enemy base if its location is known,
 	// as well as to run circuits around it.
@@ -1018,6 +1029,12 @@ bool ScoutManager::pylonHarass()
         BuildingManager::Instance().reserveMineralsForWorkerScout(0);
         return false;
     }
+
+	// if we use a proxy-gate opening, never pylon harass
+	if (Config::Strategy::StrategyName == "Proxy9-9Gate")
+	{
+		return false;
+	}
 
 	// If we haven't found the enemy base yet, we can't do any pylon harass
     BWTA::BaseLocation* enemyBase = InformationManager::Instance().getEnemyMainBaseLocation();

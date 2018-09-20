@@ -990,6 +990,9 @@ int EnsureCannonsAtBase(BWTA::BaseLocation * base, int cannons, BuildOrderQueue 
 
 void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
 {
+	// If proxy-gate opening, never handle urgent
+	if (Config::Strategy::StrategyName == "Proxy9-9Gate" && UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) == 0) return;
+
 	// This is the enemy plan that we have seen in action.
 	OpeningPlan enemyPlan = OpponentModel::Instance().getEnemyPlan();
 
