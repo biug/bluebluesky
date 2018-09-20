@@ -38,6 +38,10 @@ void WorkerManager::update()
 	drawResourceDebugInfo();
 	drawWorkerInformation(450,20);
 	workerData.drawDepotDebugInfo();
+	if (WorkerManager::Instance().getProxyWorker())
+	{
+		BWAPI::Broodwar->drawCircleMap(WorkerManager::Instance().getProxyWorker()->getPosition(), 16, BWAPI::Colors::Purple, true);
+	}
 }
 
 // Adjust worker jobs. This is done first, before handling each job.
@@ -673,7 +677,7 @@ BWAPI::Unit WorkerManager::getBuilder(const Building & b, bool setJobAsBuilder)
 	BWAPI::Unit closestMiningWorker = nullptr;
 	int closestMovingWorkerDistance = 0;
 	int closestMiningWorkerDistance = 0;
-	if (WorkerManager::Instance().getProxyWorker() && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) < 2)
+	if (WorkerManager::Instance().getProxyWorker() && b.macroLocation == MacroLocation::Proxy)
 	{
 		workerData.setWorkerJob(WorkerManager::Instance().getProxyWorker(), WorkerData::Build, b.type);
 		return WorkerManager::Instance().getProxyWorker();
@@ -683,6 +687,8 @@ BWAPI::Unit WorkerManager::getBuilder(const Building & b, bool setJobAsBuilder)
 	{
         BBS_ASSERT(unit, "Unit was null");
 
+		// skip proxy worker
+		if (unit == WorkerManager::Instance().getProxyWorker()) continue;
 		
         // gas steal building uses scout worker
         if (b.isWorkerScoutBuilding && (workerData.getWorkerJob(unit) == WorkerData::Scout))
@@ -1051,7 +1057,7 @@ bool WorkerManager::maybeMineMineralBlocks(BWAPI::Unit worker)
 
 void WorkerManager::handleProxyWorker()
 {
-	if (BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) > 1)
+	if (BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Gateway) > 2)
 	{
 		proxyWorker = nullptr;
 	}

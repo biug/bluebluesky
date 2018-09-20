@@ -704,6 +704,18 @@ BWAPI::TilePosition buildLocationInBlock(BWAPI::UnitType type, const BWEB::Block
     for (auto& tile : placements)
         if (bwebMap.isPlaceable(type, tile))
             return tile;
+	if (Config::Strategy::StrategyName == "Proxy9-9Gate")
+	{
+		Building b;
+		b.type = type;
+		b.builderUnit = WorkerManager::Instance().getProxyWorker();
+		int xx = block.Location().x, yy = block.Location().y;
+		if (b.builderUnit)
+			for (int x = xx - 8; x <= xx + 8; ++x)
+				for (int y = yy - 8; y <= yy + 8; ++y)
+					if (bwebMap.isPlaceable(type, BWAPI::TilePosition(x, y)) && BuildingPlacer::Instance().canBuildHere(BWAPI::TilePosition(x, y), b))
+						return BWAPI::TilePosition(x, y);
+	}
 
     Log().Get() << "ERROR: No position for " << type << " available in block " << block.Location();
 
@@ -747,7 +759,7 @@ BWAPI::TilePosition BuildingPlacer::placeBuildingBWEB(BWAPI::UnitType type, BWAP
 
         if (_proxyBlock != -1)
         {
-            auto location = buildLocationInBlock(type, bwebMap.Blocks()[_proxyBlock]);
+			auto location = buildLocationInBlock(type, bwebMap.Blocks()[_proxyBlock]);
             if (location.isValid()) return location;
         }
     }

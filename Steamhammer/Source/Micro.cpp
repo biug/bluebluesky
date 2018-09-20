@@ -210,11 +210,11 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 		while (nearestValidChoke < path.size())
 		{
 			const auto & choke = path[nearestValidChoke];
-			BWAPI::Position end1 = (BWAPI::Position)choke->Pos(choke->end1);
-			BWAPI::Position end2 = (BWAPI::Position)choke->Pos(choke->end2);
-			BWAPI::Position middle = (BWAPI::Position)choke->Pos(choke->middle);
+			BWAPI::Position end1 = (BWAPI::Position)choke->Pos(choke->end1) + BWAPI::Position(4, 4);
+			BWAPI::Position end2 = (BWAPI::Position)choke->Pos(choke->end2) + BWAPI::Position(4, 4);
+			BWAPI::Position middle = (BWAPI::Position)choke->Pos(choke->middle) + BWAPI::Position(4, 4);
 			BWAPI::Position pos = attacker->getPosition();
-			if (pos.getDistance(end1) <= 96 || pos.getDistance(end2) <= 96 || pos.getDistance(middle) <= 96)
+			if (pos.getDistance(end1) <= 48 || pos.getDistance(end2) <= 48 || pos.getDistance(middle) <= 48)
 			{
 				++nearestValidChoke;
 			}
@@ -231,8 +231,8 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 			BWAPI::Position currentlyMovingTowards = (BWAPI::Position)choke->Pos(choke->middle);
 			for (auto walkPosition : choke->Geometry())
 			{
-				BWAPI::Position pos(walkPosition);
-				int dist = pos.getApproxDistance(targetPosition);
+				BWAPI::Position pos = (BWAPI::Position)walkPosition + BWAPI::Position(4, 4);
+				int dist = pos.getApproxDistance(attacker->getPosition());
 				// if block, give some penalize
 				if (InformationManager::Instance().getMyUnitGrid().get(walkPosition) > 0)
 					dist += attacker->getType().groundWeapon().maxRange() + 32;
@@ -245,6 +245,7 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 			// don't move too far away from center
 			currentlyMovingTowards = (currentlyMovingTowards + (BWAPI::Position)choke->Center()) / 2;
 			attacker->move(currentlyMovingTowards);
+			BWAPI::Broodwar->drawLineMap(attacker->getPosition(), currentlyMovingTowards, BWAPI::Colors::White);
 		}
 	}
 	else

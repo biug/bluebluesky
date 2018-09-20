@@ -678,6 +678,10 @@ void ProductionManager::create(BWAPI::Unit producer, const BuildOrderItem & item
             // NOTE: This bugs out pylons if the center isn't reachable, e.g. neo moon glaive
 			desiredLocation = BWAPI::TilePosition(BWAPI::Broodwar->mapWidth()/2, BWAPI::Broodwar->mapHeight()/2);
 		}
+		else if (act.getMacroLocation() == MacroLocation::Proxy)
+		{
+			desiredLocation = BuildingPlacer::Instance().placeBuildingBWEB(act.getUnitType(), InformationManager::Instance().getMainBaseLocation(BWAPI::Broodwar->self())->getTilePosition(), act.getMacroLocation());
+		}
 		
 		BuildingManager::Instance().addBuildingTask(act, desiredLocation, item.isWorkerScoutBuilding);
 	}
