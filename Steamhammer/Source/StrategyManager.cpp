@@ -391,7 +391,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	//if (numNexusAll >= 2) buildReaver = true;
 
 	// Build high templar when we have 3 or more gas bases
-	if (numAssimilatorsCompleted >= 3 && _enemyRace == BWAPI::Races::Protoss && numHighTemplar < 4) buildHighTemplar = true;
+	//if (numAssimilatorsCompleted >= 3 && _enemyRace == BWAPI::Races::Protoss && numHighTemplar < 4) buildHighTemplar = true;
 
 	if (getGoonRange)
 	{
