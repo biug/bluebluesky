@@ -201,7 +201,6 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 
 	// if nothing prevents it, move the target position
 	// move according to chokes
-	BWAPI::Broodwar->drawLineMap(attacker->getPosition(), targetPosition, BWAPI::Colors::Purple);
 	int len = -1;
 	const auto & path = BWEM::Map::Instance().GetPath(attacker->getPosition(), targetPosition, &len);
 	if (!attacker->isFlying() && len > 0 && path.size() > 0)

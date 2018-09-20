@@ -1407,7 +1407,9 @@ void CombatCommander::updateDefenseSquadUnits(Squad & defenseSquad, const size_t
 			groundDefendersAdded += 4;
 		else
 			groundDefendersAdded += 5;
-		_squadData.assignUnitToSquad(defenderToAdd, defenseSquad);
+		// if enemy scout, we just use dragoon defend
+		if (!Config::Strategy::EnemyScoutNotRush || defenderToAdd->getType() != BWAPI::UnitTypes::Protoss_Zealot)
+			_squadData.assignUnitToSquad(defenderToAdd, defenseSquad);
 	}
 
     // Remove excess workers
@@ -1785,9 +1787,9 @@ BWAPI::Position CombatCommander::getAttackLocation(const Squad * squad)
                 double defenseFactor = defenseCount == 0 ? 1.0 : 1.0 / (1.0 + defenseCount);
 
                 // Importance of the base scales linearly with time, we don't care when it is 10 minutes old
-                // An exception is the enemy main, which we do not age until after frame 10000
+                // An exception is the enemy main without proxy-gate opening, which we do not age until after frame 10000
                 double ageFactor = 1.0;
-                if (BWAPI::Broodwar->getFrameCount() > 10000 ||
+                if (BWAPI::Broodwar->getFrameCount() > 10000 || Config::Strategy::StrategyName == "Proxy9-9Gate" ||
                     base != InformationManager::Instance().getEnemyMainBaseLocation())
                 {
                     int age = BWAPI::Broodwar->getFrameCount() - InformationManager::Instance().getBaseOwnedSince(base);

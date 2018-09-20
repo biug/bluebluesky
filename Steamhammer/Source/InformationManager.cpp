@@ -803,7 +803,6 @@ void InformationManager::updateEnemyStatInfo()
 			}
 
 		// less worker, no staitc, must be lure
-		BWAPI::Broodwar->drawTextScreen(50, 50, "worker: %d, enemy1: %d, enemy2: %d", workerInOurMain, enemyInOurMain1, enemyInOurMain2);
 		if (workerInOurMain <= 2 && enemyInOurMain1 + enemyInOurMain2 == 0)
 			Config::Strategy::EnemyScoutNotRush = true;
 	}
