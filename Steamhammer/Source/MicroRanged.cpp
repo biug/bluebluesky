@@ -294,7 +294,11 @@ BWAPI::Unit MicroRanged::getTarget(BWAPI::Unit rangedUnit, const BWAPI::Unitset 
 		}
 
 		const int priority = getAttackPriority(rangedUnit, target);		// 0..12
+		double ratio = (double)(target->getHitPoints() + target->getShields()) / (double)(target->getType().maxHitPoints() + target->getType().maxShields());
+		ratio = std::pow(ratio, 1.0 / 3.0);
+		if (ratio < 0.1) ratio = 0.1;
 		const int range = rangedUnit->getDistance(target);				// 0..map diameter in pixels
+		if (range > rangedUnit->getType().groundWeapon().maxRange()) ratio = 1.0;
 		const int closerToGoal =										// positive if target is closer than us to the goal
 			rangedUnit->getDistance(order.getPosition()) - target->getDistance(order.getPosition());
 		
@@ -313,7 +317,7 @@ BWAPI::Unit MicroRanged::getTarget(BWAPI::Unit rangedUnit, const BWAPI::Unitset 
 
 		// Let's say that 1 priority step is worth 160 pixels (5 tiles).
 		// We care about unit-target range and target-order position distance.
-		int score = 5 * 32 * priority - range;
+		int score = 5 * 32 * priority / ratio - range;
 
 		// Adjust for special features.
 		// A bonus for attacking enemies that are "in front".

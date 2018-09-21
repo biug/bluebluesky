@@ -131,19 +131,47 @@ void OpponentPlan::recognize()
 		_planIsFixed = true;
 		return;
 	}
+	// Plans below here are slow plans. Do not overwrite a fast plan with a slow plan.
+	if (fastPlan(_openingPlan))
+	{
+		return;
+	}
 	
 	// Recognize proxy gateway
-	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Pylon) < 1600 || snap.getFrame(BWAPI::UnitTypes::Protoss_Gateway) < 2200 ||
-		snap.getFrame(BWAPI::UnitTypes::Protoss_Zealot) < 3200 || 
-		(snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) < 10000 && BWAPI::Broodwar->getFrameCount() > snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) + 300 && snap.getFrame(BWAPI::UnitTypes::Protoss_Gateway) > 10000))
+	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Pylon) < 3000)
+	{
+		for (const auto & unit : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
+		{
+			if (unit.second.type == BWAPI::UnitTypes::Protoss_Pylon || unit.second.type == BWAPI::UnitTypes::Protoss_Gateway)
+			{
+				bool buildInAnyBase = false;
+				auto buildArea = BWEM::Map::Instance().GetArea((BWAPI::TilePosition)unit.second.lastPosition);
+				for (const auto & base : BWTA::getStartLocations())
+					// skip natural base, if in natural base, maybe a proxy
+					if (base != InformationManager::Instance().getMyNaturalLocation())
+						// if in any base, mark as a normal pylon/gateway
+						if (buildArea == BWEM::Map::Instance().GetArea(base->getTilePosition()))
+							buildInAnyBase = true;
+				// not a normal building, maybe proxy
+				if (!buildInAnyBase)
+				{
+					_openingPlan = OpeningPlan::ProxyGateway;
+					_planIsFixed = true;
+					WorkerManager::Instance().setCollectGas(false);
+					return;
+				}
+			}
+		}
+	}
+	// if found enemy base for a while, but no gateway, one or no pylon, maybe a proxy
+	if ((snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) < 10000 &&
+		BWAPI::Broodwar->getFrameCount() > snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) + 360 &&
+		snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0) &&
+		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 1)
 	{
 		_openingPlan = OpeningPlan::ProxyGateway;
 		_planIsFixed = true;
 		WorkerManager::Instance().setCollectGas(false);
-	}
-	// Plans below here are slow plans. Do not overwrite a fast plan with a slow plan.
-	if (fastPlan(_openingPlan))
-	{
 		return;
 	}
 
