@@ -103,10 +103,10 @@
 
 		"PvP" :
 			{ "Protoss" : [
-				{ "Weight" : 0, "Strategy" : "Proxy9-9Gate" },
-				{ "Weight" : 10, "Strategy" : "4GateGoon" },
-				{ "Weight" : 0, "Strategy" : "2GateDT" },
-				{ "Weight" : 0, "Strategy" : "12Nexus5ZealotFECannons" }
+				{ "Weight" : 10, "Strategy" : "Proxy9-9Gate" },
+				{ "Weight" : 40, "Strategy" : "4GateGoon" },
+				{ "Weight" : 40, "Strategy" : "2GateDT" },
+				{ "Weight" : 10, "Strategy" : "12Nexus5ZealotFECannons" }
 			]},
 			
 		"PvZ" :
