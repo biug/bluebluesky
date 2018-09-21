@@ -175,6 +175,15 @@ void OpponentPlan::recognize()
 		return;
 	}
 
+	// if one gateway with one citadel, maybe a DTRush
+	if ((snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) == 1))
+	{
+		_openingPlan = OpeningPlan::DTOpening;
+		_planIsFixed = true;
+		WorkerManager::Instance().setCollectGas(true);
+		return;
+	}
+
     // When we know the enemy is not doing a fast plan, set it
     // May get overridden by a more appropriate plan below later on
     if (_openingPlan == OpeningPlan::Unknown && (

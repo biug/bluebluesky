@@ -19,6 +19,7 @@ enum class OpeningPlan
 	, Turtle		// cannons/bunker/sunkens thought to be on 1 base
 	, Size
 	, ProxyGateway
+	, DTOpening
 	};
 
 const std::vector< std::pair<OpeningPlan, std::string> > PlanNames =
@@ -34,7 +35,8 @@ const std::vector< std::pair<OpeningPlan, std::string> > PlanNames =
 	std::pair<OpeningPlan, std::string>(OpeningPlan::SafeExpand, "Safe expand"),
 	std::pair<OpeningPlan, std::string>(OpeningPlan::NakedExpand, "Naked expand"),
 	std::pair<OpeningPlan, std::string>(OpeningPlan::Turtle, "Turtle"),
-	std::pair<OpeningPlan, std::string>(OpeningPlan::ProxyGateway, "ProxyGateway")
+	std::pair<OpeningPlan, std::string>(OpeningPlan::ProxyGateway, "ProxyGateway"),
+	std::pair<OpeningPlan, std::string>(OpeningPlan::DTOpening, "DTOpening")
 };
 
 // Turn an opening plan into a string.

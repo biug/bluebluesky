@@ -1025,6 +1025,11 @@ void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
 		int needMoreCannon = BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Zealot) + BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon) - BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Zealot) - BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon);
 		EnsureCannonsAtBase(InformationManager::Instance().getMyMainBaseLocation(), 2 + needMoreCannon/3, queue);
 	}
+	// If enemy use DTOpening, ensure make an observer
+	if (enemyPlan == OpeningPlan::DTOpening)
+	{
+		QueueUrgentItem(BWAPI::UnitTypes::Protoss_Observer, queue);
+	}
 
 	// Count resource depots.
 	const BWAPI::UnitType resourceDepotType = BWAPI::UnitTypes::Protoss_Nexus;
