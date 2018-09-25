@@ -146,12 +146,18 @@ void OpponentPlan::recognize()
 			{
 				bool buildInAnyBase = false;
 				auto buildArea = BWEM::Map::Instance().GetArea((BWAPI::TilePosition)unit.second.lastPosition);
-				for (const auto & base : BWTA::getStartLocations())
+				for (const auto & base : BWTA::getBaseLocations())
 					// skip natural base, if in natural base, maybe a proxy
 					if (base != InformationManager::Instance().getMyNaturalLocation())
+					{
 						// if in any base, mark as a normal pylon/gateway
 						if (buildArea == BWEM::Map::Instance().GetArea(base->getTilePosition()))
 							buildInAnyBase = true;
+						else
+							for (const auto & choke : BWEM::Map::Instance().GetArea(base->getTilePosition())->ChokePoints())
+								if (unit.second.lastPosition.getApproxDistance((BWAPI::Position)choke->Center()) < 120)
+									buildInAnyBase = true;
+					}
 				// not a normal building, maybe proxy
 				if (!buildInAnyBase)
 				{
