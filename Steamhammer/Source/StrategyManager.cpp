@@ -373,7 +373,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
         // - we aren't on the defensive
         // - our gateways are busy or we have a large income or we are close to maxed
         upgradeGround = numNexusCompleted >= 2 && (numZealots + numDragoons) >= 10 &&
-            ((numGateways - idleGateways) > 3 || gatewaySaturation > 0.75 || WorkerManager::Instance().getNumMineralWorkers() > 50 || BWAPI::Broodwar->self()->supplyUsed() >= 300)
+            ((numGateways - idleGateways) > 2 || gatewaySaturation > 0.75 || WorkerManager::Instance().getNumMineralWorkers() > 50 || BWAPI::Broodwar->self()->supplyUsed() >= 300)
             && !CombatCommander::Instance().onTheDefensive();
     }
 
