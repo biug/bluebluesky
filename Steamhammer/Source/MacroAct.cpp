@@ -47,6 +47,10 @@ MacroLocation MacroAct::getMacroLocationFromString(std::string & s)
 	{
 		return MacroLocation::HiddenTech;
 	}
+	if (s == "choke guard")
+	{
+		return MacroLocation::ChokeGuard;
+	}
 
 	BBS_ASSERT(false, "config file - bad location '@ %s'", s.c_str());
 

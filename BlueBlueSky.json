@@ -185,6 +185,7 @@
         {
 			
 			"locutusprevious": "4GateGoon",
+			"UAlbertaBot": "TurtleShrink",
 			"PurpleWave": { "Protoss" : [
 				{ "Weight" : 90, "Strategy" : "ForgeExpand5GateGoon" },
 				{ "Weight" : 10, "Strategy" : "4GateGoon" }
@@ -226,6 +227,9 @@
 
 			"Turtle"	: { "Race" : "Protoss", "OpeningGroup" : "dragoons", "OpeningBuildOrder" :
 				["go defensive", "4 x probe", "pylon @ wall then go scout while safe", "probe", "gateway @ wall", "probe", "forge @ wall", "probe", "zealot", "photon cannon @ wall", "probe", "photon cannon @ wall", "probe", "pylon", "zealot", "photon cannon @ wall", "probe", "zealot", "probe", "assimilator", "cybernetics core", "probe", "pylon", "2 x probe", "dragoon", "probe", "nexus @ natural", "probe", "dragoon", "probe", "singularity charge then go aggressive", "pylon", "dragoon", "probe", "gateway", "2 x probe", "dragoon", "2 x probe", "gateway", "pylon", "3 x probe", "2 x dragoon", "2 x probe", "pylon", "dragoon", "2 x probe", "2 x dragoon"]},
+
+			"TurtleShrink"	: { "Race" : "Protoss", "OpeningGroup" : "dragoons", "OpeningBuildOrder" :
+				["go defensive", "4 x probe", "pylon then go scout while safe", "probe", "gateway", "probe", "forge", "probe", "zealot", "photon cannon @ choke guard", "probe", "photon cannon @ choke guard", "probe", "pylon", "zealot", "photon cannon @ choke guard", "probe", "assimilator", "cybernetics core", "zealot", "probe", "photon cannon @ choke guard", "probe", "pylon", "2 x probe", "dragoon", "probe", "probe", "singularity charge then go aggressive", "dragoon", "probe", "pylon", "dragoon", "probe", "gateway", "2 x probe", "dragoon", "2 x probe", "gateway", "pylon", "3 x probe", "2 x dragoon", "2 x probe", "pylon", "dragoon", "2 x probe", "2 x dragoon"]},
 
 			"9-9GateDefensive"		: { "Race" : "Protoss", "OpeningGroup" : "zealots", "OpeningBuildOrder" :
 				["go defensive", "4 x probe", "pylon", "probe", "gateway", "probe", "gateway", "probe", "zealot", "pylon then go scout while safe", "2 x zealot", "probe", "2 x zealot", "probe", "zealot", "go aggressive", "pylon", "probe", "2 x zealot" ]},

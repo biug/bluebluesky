@@ -733,6 +733,38 @@ struct BlockData
 
 BWAPI::TilePosition BuildingPlacer::placeBuildingBWEB(BWAPI::UnitType type, BWAPI::TilePosition closeTo, MacroLocation macroLocation)
 {
+	if (macroLocation == MacroLocation::ChokeGuard)
+	{
+		auto myMain = InformationManager::Instance().getMyMainBaseLocation();
+		auto myNatural = InformationManager::Instance().getMyNaturalLocation();
+		if (myMain && myNatural)
+		{
+			// virtual building
+			Building b;
+			b.type = type;
+			b.finalPosition = myMain->getTilePosition();
+			b.builderUnit = WorkerManager::Instance().getBuilder(b, false);
+
+			// in area, find position closest to choke
+			BWAPI::TilePosition bestTile = BWAPI::TilePositions::None;
+			auto myArea = BWEM::Map::Instance().GetArea(myMain->getTilePosition());
+			auto pChoke = myArea->ChokePointsByArea().find(BWEM::Map::Instance().GetArea(myNatural->getTilePosition()));
+			if (pChoke != myArea->ChokePointsByArea().end() && !pChoke->second->empty())
+				for (int xx = myArea->TopLeft().x; xx <= myArea->BottomRight().x; ++xx)
+					for (int yy = myArea->TopLeft().y; yy <= myArea->BottomRight().y; ++yy)
+					{
+						BWAPI::TilePosition tile(xx, yy);
+						BWAPI::TilePosition chokeTile = BWAPI::TilePosition(pChoke->second->front().Center());
+						if (myArea == BWEM::Map::Instance().GetArea(tile))
+							if (bwebMap.isPlaceable(type, tile) && BuildingPlacer::Instance().canBuildHere(tile, b))
+								if (bestTile == BWAPI::TilePositions::None ||
+									bestTile.getApproxDistance(chokeTile) > tile.getApproxDistance(chokeTile))
+									bestTile = tile;
+					}
+			if (bestTile != BWAPI::TilePositions::None) return bestTile;
+		}
+	}
+
 	if (type == BWAPI::UnitTypes::Protoss_Photon_Cannon)
 	{
 		const BWEB::Station* station = bwebMap.getClosestStation(closeTo);
