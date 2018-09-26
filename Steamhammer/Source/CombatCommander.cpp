@@ -755,6 +755,14 @@ void CombatCommander::updateAttackSquads()
 		{
 			defendPosition = base->getPosition();
 		}
+		else if (Config::Strategy::StrategyName == "TurtleShrink")
+		{
+			defendPosition = base->getPosition();
+			if (InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::Broodwar->self()) >= 4)
+				for (const auto & cannon : BWAPI::Broodwar->self()->getUnits())
+					if (cannon && cannon->getType() == BWAPI::UnitTypes::Protoss_Photon_Cannon && cannon->getPosition().isValid() && defendPosition.getApproxDistance(base->getPosition()) < cannon->getPosition().getApproxDistance(base->getPosition()))
+						defendPosition = (cannon->getPosition() + base->getPosition()) / 2;
+		}
         // If we have taken the natural, defend it
         else if (natural && BWAPI::Broodwar->self() == InformationManager::Instance().getBaseOwner(natural))
         {
