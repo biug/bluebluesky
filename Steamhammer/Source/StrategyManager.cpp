@@ -390,8 +390,8 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	// Disabled until we can micro reavers better
 	//if (numNexusAll >= 2) buildReaver = true;
 
-	// Build high templar when we have 3 or more gas bases
-	//if (numAssimilatorsCompleted >= 3 && _enemyRace == BWAPI::Races::Protoss && numHighTemplar < 4) buildHighTemplar = true;
+	// Build high templar when we extra gas
+	if (self->gas() / self->minerals() > 3 && self->gas() > 800 && buildGround) buildHighTemplar = true;
 
 	if (getGoonRange)
 	{
@@ -549,9 +549,9 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	{
 		if (!startedCyberCore) goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1));
 
-		if (!startedRoboBay
-			&& UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) > 0)
-			goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Robotics_Facility, 1));
+		//if (!startedRoboBay
+			//&& UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) > 0)
+			//goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Robotics_Facility, 1));
 
 		if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) > 0
 			&& !startedCitadel)
@@ -663,7 +663,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 
     // Queue a gateway if we have no idle gateways and enough minerals for it
     // If we queue too many, the production manager will cancel them
-    if (buildGround && idleGateways == 0 && self->minerals() >= 150)
+    if (buildGround && idleGateways == 0 && self->minerals() >= 150  && numGateways < 14)
     {
         goal.push_back(MetaPair(BWAPI::UnitTypes::Protoss_Gateway, numGateways + 1));
     }
@@ -1380,7 +1380,7 @@ void StrategyManager::handleMacroProduction(BuildOrderQueue & queue)
     // - we are rushing and already have two workers on each patch, plus one extra to build stuff
     if (!queue.anyInQueue(BWAPI::UnitTypes::Protoss_Probe)
         && probes < WorkerManager::Instance().getMaxWorkers()
-        && WorkerManager::Instance().getNumIdleWorkers() < 5
+        && WorkerManager::Instance().getNumIdleWorkers() < 3
         && (BWAPI::Broodwar->self()->supplyUsed() < 350 || BWAPI::Broodwar->self()->minerals() < 1500)
         && (!isRushing() || probes < ((mineralPatches * 2) + 1)))
     {

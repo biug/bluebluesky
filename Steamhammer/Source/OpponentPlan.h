@@ -18,8 +18,9 @@ enum class OpeningPlan
 	, NakedExpand	// undefended fast expansion (usual for zerg, bold for others)
 	, Turtle		// cannons/bunker/sunkens thought to be on 1 base
 	, Size
-	, ProxyGateway
+	, ProxyGateway  // 2 or more gateways in the field
 	, DTOpening
+	, MassDragoon   // 3 or more gateways, 1 nexus, dragoon rush
 	};
 
 const std::vector< std::pair<OpeningPlan, std::string> > PlanNames =
