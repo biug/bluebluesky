@@ -1,5 +1,8 @@
 #include "MapTools.h"
 
+#include <ctime>
+#include <Windows.h>
+#include <fstream>
 #include "BuildingPlacer.h"
 #include "InformationManager.h"
 
@@ -368,6 +371,18 @@ void MapTools::drawHomeDistanceMap()
     }
 }
 
+void MapTools::drawChokePath()
+{
+	for (const auto & path : _chokePaths)
+	{
+		if (path.second.empty()) continue;
+		for (int i = 0; i < path.second.size() - 1; ++i)
+			BWAPI::Broodwar->drawLineMap((BWAPI::Position)path.second[i] + BWAPI::Position(16, 16), (BWAPI::Position)path.second[i + 1] + BWAPI::Position(16, 16), BWAPI::Colors::Blue);
+		BWAPI::Broodwar->drawCircleMap((BWAPI::Position)((BWAPI::TilePosition)path.first.first) + BWAPI::Position(16, 16), 16, BWAPI::Colors::Red, true);
+		BWAPI::Broodwar->drawCircleMap((BWAPI::Position)((BWAPI::TilePosition)path.first.second) + BWAPI::Position(16, 16), 16, BWAPI::Colors::Red, true);
+	}
+}
+
 BWTA::BaseLocation * MapTools::nextExpansion(bool hidden, bool wantMinerals, bool wantGas)
 {
 	BBS_ASSERT(wantMinerals || wantGas, "unwanted expansion");
@@ -516,4 +531,174 @@ BWAPI::TilePosition MapTools::getNextExpansion(bool hidden, bool wantMinerals, b
 		return base->getTilePosition();
 	}
 	return BWAPI::TilePositions::None;
+}
+
+std::vector<BWAPI::TilePosition> MapTools::calcPath(const BWAPI::TilePosition & tp1, const BWAPI::TilePosition & tp2, const std::map<BWAPI::TilePosition, int> & tilesWithDist)
+{
+	std::map<BWAPI::TilePosition, BWAPI::TilePosition> knownLastTiles;
+	std::map<BWAPI::TilePosition, BWAPI::TilePosition> lastTiles;
+	std::set<std::pair<int, BWAPI::TilePosition>> visitedDistTiles;
+	std::map<BWAPI::TilePosition, int> visitedTilesDist;
+	visitedDistTiles.insert(std::make_pair(0, tp1));
+	visitedTilesDist[tp1] = 0;
+	lastTiles[tp1] = BWAPI::TilePositions::None;
+	int level = 0, maxLevel = (int)tilesWithDist.size();
+	while (knownLastTiles.find(tp2) == knownLastTiles.end() && !visitedDistTiles.empty() && level++ < maxLevel)
+	{
+		std::set<BWAPI::TilePosition> newTiles;
+		int bestDist = visitedDistTiles.begin()->first;
+		BWAPI::TilePosition bestTile = visitedDistTiles.begin()->second;
+		visitedDistTiles.erase(visitedDistTiles.begin());
+		knownLastTiles[bestTile] = lastTiles[bestTile];
+		for (int x = -1; x <= 1; ++x)
+			for (int y = -1; y <= 1; ++y)
+				if (x != 0 || y != 0)
+				{
+					BWAPI::TilePosition newTile = BWAPI::TilePosition(bestTile.x + x, bestTile.y + y);
+					if (tilesWithDist.find(newTile) != tilesWithDist.end() || newTile == tp2)
+					{
+						int dist = bestDist + (x == 0 || y == 0 ? 0 : 1) + (newTile == tp2 ? 1 : tilesWithDist.at(newTile)) * 2;
+						if (visitedTilesDist.find(newTile) == visitedTilesDist.end())
+						{
+							visitedDistTiles.insert(std::make_pair(dist, newTile));
+							visitedTilesDist[newTile] = dist;
+							lastTiles[newTile] = bestTile;
+						}
+						else if (visitedTilesDist[newTile] > dist)
+						{
+							visitedDistTiles.erase(std::make_pair(visitedTilesDist[newTile], newTile));
+							visitedDistTiles.insert(std::make_pair(dist, newTile));
+							visitedTilesDist[newTile] = dist;
+							lastTiles[newTile] = bestTile;
+						}
+					}
+				}
+	}
+	std::vector<BWAPI::TilePosition> result;
+	BWAPI::TilePosition end0 = tp2;
+	while (knownLastTiles.find(end0) != knownLastTiles.end() && end0 != tp1)
+	{
+		result.push_back(end0);
+		end0 = knownLastTiles[end0];
+	}
+	return result;
+}
+
+void MapTools::update()
+{
+	for (const auto & area : BWEM::Map::Instance().Areas())
+	{
+		// get a border
+		LARGE_INTEGER t1, t2, tc;
+		QueryPerformanceFrequency(&tc);
+		QueryPerformanceCounter(&t1);
+		bool getOne = false;
+		if (_tileWithDistToBorder.find(&area) == _tileWithDistToBorder.end())
+		{
+			std::set<BWAPI::TilePosition> innerTiles;
+			for (int xx = area.TopLeft().x; xx <= area.BottomRight().x; ++xx)
+				for (int yy = area.TopLeft().y; yy <= area.BottomRight().y; ++yy)
+				{
+					BWAPI::TilePosition tile(xx, yy);
+					if (&area == BWEM::Map::Instance().GetArea(tile))
+						innerTiles.insert(tile);
+				}
+
+			std::set<BWAPI::TilePosition> oldBorders;
+			_tileWithDistToBorder[&area].clear();
+			std::map<BWAPI::TilePosition, int> & innerTilesWithDist = _tileWithDistToBorder[&area];
+
+			for (const auto & tile : innerTiles)
+				if (innerTiles.find(BWAPI::TilePosition(tile.x, tile.y - 1)) == innerTiles.end() ||
+					innerTiles.find(BWAPI::TilePosition(tile.x, tile.y + 1)) == innerTiles.end() ||
+					innerTiles.find(BWAPI::TilePosition(tile.x - 1, tile.y)) == innerTiles.end() ||
+					innerTiles.find(BWAPI::TilePosition(tile.x + 1, tile.y)) == innerTiles.end())
+					innerTilesWithDist[BWAPI::TilePosition(tile)] = 0;
+			// remove initial border from inners
+			for (const auto & border : innerTilesWithDist)
+			{
+				innerTiles.erase(border.first);
+				oldBorders.insert(border.first);
+			}
+
+			int level = 1;
+			while (!innerTiles.empty() && level <= Config::Macro::BorderSpacing)
+			{
+				std::set<BWAPI::TilePosition> newBorders;
+				for (const auto & old : oldBorders)
+					// around old border, find new border
+					for (int x = -1; x <= 1; ++x)
+						for (int y = -1; y <= 1; ++y)
+							if (std::abs(x) + std::abs(y) == 1)
+								if (innerTiles.find(BWAPI::TilePosition(old.x + x, old.y + y)) != innerTiles.end())
+									newBorders.insert(BWAPI::TilePosition(old.x + x, old.y + y));
+				// assign new border to old border
+				oldBorders.clear();
+				for (const auto & border : newBorders)
+				{
+					innerTiles.erase(border);
+					oldBorders.insert(border);
+					innerTilesWithDist[BWAPI::TilePosition(border)] = level;
+				}
+				++level;
+			}
+			for (const auto & tile : innerTiles)
+				innerTilesWithDist[BWAPI::TilePosition(tile)] = level - 1;
+
+			for (auto & tileWithDist : innerTilesWithDist)
+				tileWithDist.second = level - tileWithDist.second;
+
+			getOne = true;
+		}
+
+		const std::map<BWAPI::TilePosition, int> & innerTilesWithDist = _tileWithDistToBorder.at(&area);
+
+		if (getOne) break;
+		if (area.ChokePoints().empty()) continue;
+
+		for (int i = 0; i < area.ChokePoints().size() - 1; ++i)
+		{
+			for (int j = i + 1; j < area.ChokePoints().size(); ++j)
+			{
+				auto & choke1 = area.ChokePoints()[i];
+				auto & choke2 = area.ChokePoints()[j];
+				ChokePair cp(choke1->Center(), choke2->Center());
+				QueryPerformanceFrequency(&tc);
+				QueryPerformanceCounter(&t1);
+				if (_chokePaths.find(cp) == _chokePaths.end())
+				{
+					BWAPI::TilePosition end1 = BWAPI::TilePosition(choke1->Center());
+					BWAPI::TilePosition end2 = BWAPI::TilePosition(choke2->Center());
+					auto path = calcPath(end2, end1, innerTilesWithDist);
+					_chokePaths[cp] = path;
+					// get a path, then break
+					getOne = true;
+				}
+				if (getOne) break;
+			}
+			if (getOne) break;
+		}
+		if (getOne) break;
+	}
+}
+
+const ChokePath & MapTools::getChokePath(const BWAPI::WalkPosition & w1, const BWAPI::WalkPosition & w2)
+{
+	if (_chokePaths.find(ChokePair(w1, w2)) != _chokePaths.end())
+		return _chokePaths[ChokePair(w1, w2)];
+	if (_chokePaths.find(ChokePair(w2, w1)) != _chokePaths.end())
+		return _chokePaths[ChokePair(w2, w1)];
+	return _emptyChokePath;
+}
+
+int MapTools::borderDist(const BWAPI::TilePosition & t)
+{
+	const auto & area = BWEM::Map::Instance().GetArea(t);
+	if (_tileWithDistToBorder.find(area) != _tileWithDistToBorder.end())
+	{
+		const auto & tiles = _tileWithDistToBorder.at(area);
+		if (tiles.find(t) != tiles.end())
+			return tiles.at(t);
+	}
+	return Config::Macro::BorderSpacing;			
 }

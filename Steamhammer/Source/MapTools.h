@@ -32,6 +32,9 @@ struct ChokeData
     {};
 };
 
+typedef std::pair<BWAPI::WalkPosition, BWAPI::WalkPosition> ChokePair;
+typedef std::vector<BWAPI::TilePosition> ChokePath;
+
 class MapTools
 {
 	const size_t allMapsSize = 40;			// store this many distance maps in _allMaps
@@ -46,7 +49,12 @@ class MapTools
 						_buildable;
 	std::vector< std::vector<bool> >
 						_depotBuildable;
+	std::map<const BWEM::Area *, std::map<BWAPI::TilePosition, int>>
+						_tileWithDistToBorder;
+	std::map<ChokePair, ChokePath>
+						_chokePaths;
 	bool				_hasIslandBases;
+	ChokePath			_emptyChokePath;
 
     MapTools();
 
@@ -75,11 +83,19 @@ public:
 	const std::vector<BWAPI::TilePosition> & getClosestTilesTo(BWAPI::TilePosition pos);
 	const std::vector<BWAPI::TilePosition> & getClosestTilesTo(BWAPI::Position pos);
 
+	std::vector<BWAPI::TilePosition> calcPath(const BWAPI::TilePosition & tp1, const BWAPI::TilePosition & tp2, const std::map<BWAPI::TilePosition, int> & tiles);
+
 	void	drawHomeDistanceMap();
+	void	drawChokePath();
 
 	BWAPI::TilePosition	getNextExpansion(bool hidden, bool wantMinerals, bool wantGas);
 
 	bool	hasIslandBases() const { return _hasIslandBases; };
+
+	void	update();
+
+	const ChokePath & getChokePath(const BWAPI::WalkPosition & w1, const BWAPI::WalkPosition & w2);
+	int borderDist(const BWAPI::TilePosition & t);
 };
 
 }

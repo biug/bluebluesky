@@ -113,6 +113,7 @@ namespace Config
 		extern int AbsoluteMaxWorkers;
         extern int BuildingSpacing;
         extern int PylonSpacing;
+		extern int BorderSpacing;
 		extern int ProductionJamFrameLimit;
 		extern bool ExpandToIslands;
     }
