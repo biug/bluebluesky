@@ -91,6 +91,7 @@ void ParseUtils::ParseConfigFile(const std::string & filename)
         const rapidjson::Value & macro = doc["Macro"];
         JSONTools::ReadInt("BOSSFrameLimit", macro, Config::Macro::BOSSFrameLimit);
         JSONTools::ReadInt("PylonSpacing", macro, Config::Macro::PylonSpacing);
+		JSONTools::ReadInt("BorderSpacing", macro, Config::Macro::BorderSpacing);
 
 		Config::Macro::ProductionJamFrameLimit = GetIntByRace("ProductionJamFrameLimit", macro);
 		Config::Macro::BuildingSpacing = GetIntByRace("BuildingSpacing", macro);

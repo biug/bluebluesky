@@ -33,7 +33,8 @@
 		"WorkersPerPatch"			: { "Zerg" : 1.6, "Protoss" : 2.2, "Terran" : 2.4 },
 		"AbsoluteMaxWorkers"		: 75,
         "BuildingSpacing"           : 1,
-        "PylonSpacing"              : 3
+        "PylonSpacing"              : 3,
+        "BorderSpacing"				: 3
     },
 
     "Debug" :

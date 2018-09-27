@@ -118,6 +118,7 @@ namespace Config
         int BuildingSpacing                 = 1;
         int PylonSpacing                    = 3;
 		int ProductionJamFrameLimit			= 360;
+		int BorderSpacing					= 3;
 		bool ExpandToIslands				= false;
     }
 

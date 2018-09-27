@@ -128,6 +128,16 @@ void GameCommander::update()
 	_timerManager.stopTimer(TimerManager::OpponentModel);
 
 #ifdef CRASH_DEBUG
+	Log().Debug() << "MapTools";
+#endif
+
+	_timerManager.startTimer(TimerManager::MapTools);
+	MapTools::Instance().update();
+	_timerManager.stopTimer(TimerManager::MapTools);
+
+	//MapTools::Instance().drawChokePath();
+
+#ifdef CRASH_DEBUG
 	Log().Debug() << "(done frame)";
 #endif
 
@@ -169,7 +179,7 @@ void GameCommander::drawDebugInterface()
 	MapTools::Instance().drawHomeDistanceMap();
     
 	_combatCommander.drawSquadInformation(200, 30);
-    _timerManager.displayTimers(490, 225);
+    _timerManager.displayTimers(490, 210);
     drawGameInformation(4, 1);
 
 	drawUnitOrders();
