@@ -391,7 +391,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	//if (numNexusAll >= 2) buildReaver = true;
 
 	// Build high templar when we extra gas
-	if (self->gas() / self->minerals() > 3 && self->gas() > 800 && buildGround) buildHighTemplar = true;
+	if (self->gas() / self->minerals() > 3 && self->gas() > 800 && buildGround && self->minerals() > 0) buildHighTemplar = true;
 
 	if (getGoonRange)
 	{
@@ -1380,7 +1380,7 @@ void StrategyManager::handleMacroProduction(BuildOrderQueue & queue)
     // - we are rushing and already have two workers on each patch, plus one extra to build stuff
     if (!queue.anyInQueue(BWAPI::UnitTypes::Protoss_Probe)
         && probes < WorkerManager::Instance().getMaxWorkers()
-        && WorkerManager::Instance().getNumIdleWorkers() < 3
+        && ((WorkerManager::Instance().getNumIdleWorkers() < 2 && BWAPI::Broodwar->self()->incompleteUnitCount(BWAPI::UnitTypes::Protoss_Nexus) == 0) || (WorkerManager::Instance().getNumIdleWorkers() < 6 && BWAPI::Broodwar->self()->incompleteUnitCount(BWAPI::UnitTypes::Protoss_Nexus) > 0))
         && (BWAPI::Broodwar->self()->supplyUsed() < 350 || BWAPI::Broodwar->self()->minerals() < 1500)
         && (!isRushing() || probes < ((mineralPatches * 2) + 1)))
     {

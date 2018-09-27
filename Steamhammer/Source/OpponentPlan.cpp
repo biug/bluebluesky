@@ -175,7 +175,8 @@ void OpponentPlan::recognize()
 		snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Forge) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) == 0 &&
-		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 1)
+		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 1 &&
+		BWAPI::Broodwar->enemy()->incompleteUnitCount(BWAPI::UnitTypes::Protoss_Nexus) == 0)
 	{
 		_openingPlan = OpeningPlan::ProxyGateway;
 		_planIsFixed = true;
