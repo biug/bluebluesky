@@ -388,7 +388,9 @@ void MapTools::drawChokePath()
 		if (unit && unit->exists() && unit->getPosition().isValid() && unit->getType().isBuilding())
 		{
 			auto tile = unit->getTilePosition();
+			if (!tile.isValid()) continue;
 			const auto & area = bwemMap.GetArea(tile);
+			if (!area) continue;
 			for (const auto & choke : area->ChokePoints())
 			{
 				auto path = getChokePath(tile, choke->Center());
@@ -556,7 +558,7 @@ void MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 	{
 		if (_minPath[area].find(cp) != _minPath[area].end())
 		{
-			if (area->Bases().size() == 0 || tilesWithDist.size() > 1000)
+			if (area->Bases().size() == 0 || tilesWithDist.size() > 2000)
 			{
 				return;
 			}
@@ -599,7 +601,7 @@ void MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 					{
 						int dist = bestDist + (x == 0 || y == 0 ? 0 : 1) + tilesWithDist.at(newTile) * 2;
 						if (_tileWithDistToBuilding.find(newTile) != _tileWithDistToBuilding.end())
-							dist += _tileWithDistToBuilding.at(newTile) / 2;
+							dist += _tileWithDistToBuilding.at(newTile) / 1.5;
 						if (visitedTilesDist.find(newTile) == visitedTilesDist.end())
 						{
 							visitedDistTiles.insert(std::make_pair(dist, newTile));
@@ -729,7 +731,6 @@ void MapTools::update()
 				}
 		}
 	}
-	BWAPI::Broodwar->sendText("we total have %d path pairs", _minPathKeys.size());
 	calcPath(_minPathKeys[_minPathCountIndex].first, _minPathKeys[_minPathCountIndex].second);
 	++_minPathCountIndex;
 	if (_minPathCountIndex >= _minPathKeys.size()) _minPathCountIndex = 0;
