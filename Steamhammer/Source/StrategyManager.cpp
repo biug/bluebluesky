@@ -391,7 +391,7 @@ const MetaPairVector StrategyManager::getProtossBuildOrderGoal()
 	//if (numNexusAll >= 2) buildReaver = true;
 
 	// Build high templar when we extra gas
-	if (self->gas() / self->minerals() > 3 && self->gas() > 800 && buildGround) buildHighTemplar = true;
+	if (self->minerals() > 1 && self->gas() / self->minerals() > 3 && self->gas() > 800 && buildGround) buildHighTemplar = true;
 
 	if (getGoonRange)
 	{
