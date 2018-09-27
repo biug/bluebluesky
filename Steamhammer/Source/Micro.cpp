@@ -1,6 +1,7 @@
 #include "Micro.h"
 #include "MapGrid.h"
 #include "UnitUtil.h"
+#include "MapTools.h"
 
 const double pi = 3.14159265358979323846;
 
@@ -222,7 +223,8 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 		}
 		if (nearestValidChoke == path.size())
 		{
-			attacker->move(targetPosition);
+			Move(attacker, targetPosition);
+			//attacker->move(targetPosition);
 		}
 		else
 		{
@@ -244,13 +246,15 @@ void Micro::SmartMove(BWAPI::Unit attacker, const BWAPI::Position & targetPositi
 			}
 			// don't move too far away from center
 			currentlyMovingTowards = (currentlyMovingTowards + (BWAPI::Position)choke->Center()) / 2;
-			attacker->move(currentlyMovingTowards);
+			Move(attacker, currentlyMovingTowards);
+			//attacker->move(currentlyMovingTowards);
 			BWAPI::Broodwar->drawLineMap(attacker->getPosition(), currentlyMovingTowards, BWAPI::Colors::White);
 		}
 	}
 	else
 	{
-		attacker->move(targetPosition);
+		Move(attacker, targetPosition);
+		//attacker->move(targetPosition);
 	}
 	TotalCommands++;
 

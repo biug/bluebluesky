@@ -51,10 +51,10 @@ class MapTools
 						_depotBuildable;
 	std::map<const BWEM::Area *, std::map<BWAPI::TilePosition, int>>
 						_tileWithDistToBorder;
-	std::map<ChokePair, ChokePath>
-						_chokePaths;
+	std::map<const BWEM::Area *, std::map<const BWEM::ChokePoint *, std::map<BWAPI::TilePosition, BWAPI::TilePosition>>>
+						_minPath;
 	bool				_hasIslandBases;
-	ChokePath			_emptyChokePath;
+	ChokePath			_chokePath;
 
     MapTools();
 
@@ -83,7 +83,8 @@ public:
 	const std::vector<BWAPI::TilePosition> & getClosestTilesTo(BWAPI::TilePosition pos);
 	const std::vector<BWAPI::TilePosition> & getClosestTilesTo(BWAPI::Position pos);
 
-	std::vector<BWAPI::TilePosition> calcPath(const BWAPI::TilePosition & tp1, const BWAPI::TilePosition & tp2, const std::map<BWAPI::TilePosition, int> & tiles);
+	bool calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp);
+	bool calcBorder(const BWEM::Area & area);
 
 	void	drawHomeDistanceMap();
 	void	drawChokePath();
@@ -94,7 +95,7 @@ public:
 
 	void	update();
 
-	const ChokePath & getChokePath(const BWAPI::WalkPosition & w1, const BWAPI::WalkPosition & w2);
+	const ChokePath & getChokePath(const BWAPI::TilePosition & unit, const BWAPI::WalkPosition & choke);
 	int borderDist(const BWAPI::TilePosition & t);
 };
 
