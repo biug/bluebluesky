@@ -51,8 +51,13 @@ class MapTools
 						_depotBuildable;
 	std::map<const BWEM::Area *, std::map<BWAPI::TilePosition, int>>
 						_tileWithDistToBorder;
+	std::map<const BWAPI::TilePosition, int>
+						_tileWithDistToBuilding;
 	std::map<const BWEM::Area *, std::map<const BWEM::ChokePoint *, std::map<BWAPI::TilePosition, BWAPI::TilePosition>>>
 						_minPath;
+	std::vector<std::pair<const BWEM::Area *, const BWEM::ChokePoint *>>
+						_minPathKeys;
+	int					_minPathCountIndex;
 	bool				_hasIslandBases;
 	ChokePath			_chokePath;
 
@@ -83,7 +88,7 @@ public:
 	const std::vector<BWAPI::TilePosition> & getClosestTilesTo(BWAPI::TilePosition pos);
 	const std::vector<BWAPI::TilePosition> & getClosestTilesTo(BWAPI::Position pos);
 
-	bool calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp);
+	void calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp);
 	bool calcBorder(const BWEM::Area & area);
 
 	void	drawHomeDistanceMap();

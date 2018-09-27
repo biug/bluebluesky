@@ -135,7 +135,7 @@ void GameCommander::update()
 	MapTools::Instance().update();
 	_timerManager.stopTimer(TimerManager::MapTools);
 
-	//MapTools::Instance().drawChokePath();
+	MapTools::Instance().drawChokePath();
 
 #ifdef CRASH_DEBUG
 	Log().Debug() << "(done frame)";

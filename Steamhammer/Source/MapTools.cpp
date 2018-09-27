@@ -142,6 +142,7 @@ MapTools::MapTools()
 	// TODO testing
 	//BWAPI::TilePosition homePosition = BWAPI::Broodwar->self()->getStartLocation();
 	//BWAPI::Broodwar->printf("start position %d,%d", homePosition.x, homePosition.y);
+	_minPathCountIndex = 0;
 }
 
 // Read the map data from BWAPI and remember which 32x32 build tiles are walkable.
@@ -373,6 +374,29 @@ void MapTools::drawHomeDistanceMap()
 
 void MapTools::drawChokePath()
 {
+	//for (const auto & tile : _tileWithDistToBuilding)
+	//{
+	//	const auto & area = bwemMap.GetArea(tile.first);
+	//	if (_tileWithDistToBorder.find(area) != _tileWithDistToBorder.end() && _tileWithDistToBorder.at(area).find(tile.first) != _tileWithDistToBorder.at(area).end())
+	//	{
+	//		BWAPI::Broodwar->drawCircleMap(BWAPI::Position(tile.first.x * 32 + 16, tile.first.y * 32 + 16), 16, BWAPI::Colors::Cyan);
+	//		BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first.x * 32 + 16, tile.first.y * 32 + 16), "%d %d", tile.second, _tileWithDistToBorder.at(area).at(tile.first));
+	//	}
+	//}
+	for (const auto & unit : BWAPI::Broodwar->self()->getUnits())
+	{
+		if (unit && unit->exists() && unit->getPosition().isValid() && unit->getType().isBuilding())
+		{
+			auto tile = unit->getTilePosition();
+			const auto & area = bwemMap.GetArea(tile);
+			for (const auto & choke : area->ChokePoints())
+			{
+				auto path = getChokePath(tile, choke->Center());
+				for (const auto & node : path)
+					BWAPI::Broodwar->drawCircleMap(BWAPI::Position(node.x * 32 + 16, node.y * 32 + 16), 4, BWAPI::Colors::Red, true);
+			}
+		}
+	}
 }
 
 BWTA::BaseLocation * MapTools::nextExpansion(bool hidden, bool wantMinerals, bool wantGas)
@@ -525,11 +549,18 @@ BWAPI::TilePosition MapTools::getNextExpansion(bool hidden, bool wantMinerals, b
 	return BWAPI::TilePositions::None;
 }
 
-bool MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
+void MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 {
+	const auto & tilesWithDist = _tileWithDistToBorder[area];
 	if (_minPath.find(area) != _minPath.end())
 	{
-		if (_minPath[area].find(cp) != _minPath[area].end()) return false;
+		if (_minPath[area].find(cp) != _minPath[area].end())
+		{
+			if (area->Bases().size() == 0 || tilesWithDist.size() > 1000)
+			{
+				return;
+			}
+		}
 		_minPath[area][cp].clear();
 	}
 	else
@@ -539,7 +570,8 @@ bool MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 	}
 
 	auto & knownLastTiles = _minPath[area][cp];
-	const auto & tilesWithDist = _tileWithDistToBorder[area];
+
+	knownLastTiles.clear();
 
 	BWAPI::TilePosition destiny = (BWAPI::TilePosition)cp->Center();
 	std::map<BWAPI::TilePosition, BWAPI::TilePosition> lastTiles;
@@ -566,6 +598,8 @@ bool MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 					if (tilesWithDist.find(newTile) != tilesWithDist.end())
 					{
 						int dist = bestDist + (x == 0 || y == 0 ? 0 : 1) + tilesWithDist.at(newTile) * 2;
+						if (_tileWithDistToBuilding.find(newTile) != _tileWithDistToBuilding.end())
+							dist += _tileWithDistToBuilding.at(newTile) / 2;
 						if (visitedTilesDist.find(newTile) == visitedTilesDist.end())
 						{
 							visitedDistTiles.insert(std::make_pair(dist, newTile));
@@ -582,7 +616,6 @@ bool MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 					}
 				}
 	}
-	return true;
 }
 
 bool MapTools::calcBorder(const BWEM::Area & area)
@@ -649,11 +682,57 @@ void MapTools::update()
 {
 	for (const auto & area : BWEM::Map::Instance().Areas())
 	{
-		if (calcBorder(area)) return;
-
-		for (const auto & choke : area.ChokePoints())
-			if (calcPath(&area, choke)) return;
+		if (calcBorder(area))
+		{
+			for (const auto & choke : area.ChokePoints())
+			{
+				_minPathKeys.push_back(std::make_pair(&area, choke));
+			}
+			return;
+		}
 	}
+	// 计算建筑对地形的势能
+	_tileWithDistToBuilding.clear();
+	for (const auto & unit : BWAPI::Broodwar->self()->getUnits())
+	{
+		if (unit && unit->exists() && unit->getPosition().isValid() && unit->getType().isBuilding())
+		{
+			auto typeSize = unit->getType().tileSize();
+			auto topLeft = unit->getTilePosition();
+			auto center = unit->getPosition() + BWAPI::Position(typeSize.x * 16, typeSize.y * 16);
+			int radius = center.getApproxDistance(BWAPI::Position((topLeft.x - 1) * 32 + 16, (topLeft.y - 1) * 32 + 16)) / 16 + 1;
+			for (int xx = topLeft.x - 1; xx < topLeft.x + typeSize.x + 1; ++xx)
+				for (int yy = topLeft.y - 1; yy < topLeft.y + typeSize.y + 1; ++yy)
+				{
+					auto tile = BWAPI::TilePosition(xx, yy);
+					if (_tileWithDistToBuilding.find(tile) == _tileWithDistToBuilding.end())
+						_tileWithDistToBuilding[tile] = 0;
+					_tileWithDistToBuilding[tile] += radius - center.getApproxDistance(BWAPI::Position(xx * 32 + 16, yy * 32 + 16)) / 16;
+				}
+		}
+	}
+	for (const auto & unitInfo : InformationManager::Instance().getUnitInfo(BWAPI::Broodwar->enemy()))
+	{
+		if (unitInfo.second.lastPosition.isValid() && !unitInfo.second.goneFromLastPosition && unitInfo.second.type.isBuilding())
+		{
+			auto typeSize = unitInfo.second.type.tileSize();
+			auto topLeft = (BWAPI::TilePosition)unitInfo.second.lastPosition;
+			auto center = unitInfo.second.lastPosition + BWAPI::Position(typeSize.x * 16, typeSize.y * 16);
+			int radius = center.getApproxDistance(BWAPI::Position((topLeft.x - 1) * 32 + 16, (topLeft.y - 1) * 32 + 16)) / 16 + 1;
+			for (int xx = topLeft.x - 1; xx < topLeft.x + typeSize.x + 1; ++xx)
+				for (int yy = topLeft.y - 1; yy < topLeft.y + typeSize.y + 1; ++yy)
+				{
+					auto tile = BWAPI::TilePosition(xx, yy);
+					if (_tileWithDistToBuilding.find(tile) == _tileWithDistToBuilding.end())
+						_tileWithDistToBuilding[tile] = 0;
+					_tileWithDistToBuilding[tile] += radius - center.getApproxDistance(BWAPI::Position(xx * 32 + 16, yy * 32 + 16)) / 16;
+				}
+		}
+	}
+	BWAPI::Broodwar->sendText("we total have %d path pairs", _minPathKeys.size());
+	calcPath(_minPathKeys[_minPathCountIndex].first, _minPathKeys[_minPathCountIndex].second);
+	++_minPathCountIndex;
+	if (_minPathCountIndex >= _minPathKeys.size()) _minPathCountIndex = 0;
 }
 
 const ChokePath & MapTools::getChokePath(const BWAPI::TilePosition & unitP, const BWAPI::WalkPosition & chokeP)
