@@ -601,7 +601,7 @@ void MapTools::calcPath(const BWEM::Area * area, const BWEM::ChokePoint * cp)
 					{
 						int dist = bestDist + (x == 0 || y == 0 ? 0 : 1) + tilesWithDist.at(newTile) * 2;
 						if (_tileWithDistToBuilding.find(newTile) != _tileWithDistToBuilding.end())
-							dist += _tileWithDistToBuilding.at(newTile) / 1.5;
+							dist += _tileWithDistToBuilding.at(newTile);
 						if (visitedTilesDist.find(newTile) == visitedTilesDist.end())
 						{
 							visitedDistTiles.insert(std::make_pair(dist, newTile));
