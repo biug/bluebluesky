@@ -54,6 +54,8 @@ class ScoutManager
     int                             _previousScoutHP;
 	std::vector<BWAPI::Position>    _enemyRegionVertices;
 	int								_enemyBaseLastSeen;
+	int								_enemyMainFirstSeen;
+	std::vector<std::pair<BWAPI::Position, bool>> _firstScoutPoint;
 
 	PylonHarassStates				_pylonHarassState;
     std::vector<HarassPylon>        _activeHarassPylons;
@@ -103,5 +105,7 @@ public:
 	void setScoutCommand(MacroCommandType cmd);
 
 	bool eyesOnEnemyBase() { return _enemyBaseLastSeen != 0 && _enemyBaseLastSeen > (BWAPI::Broodwar->getFrameCount() - 250); }
+
+	int enemyMainFirstSeen() { return _enemyMainFirstSeen; }
 };
 }

@@ -169,14 +169,15 @@ void OpponentPlan::recognize()
 			}
 		}
 	}
+	int enemyMainFirstSeen = ScoutManager::Instance().enemyMainFirstSeen();
 	// if found enemy base for a while, but no gateway, one or no pylon, maybe a proxy
-	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) < 10000 &&
-		BWAPI::Broodwar->getFrameCount() > snap.getFrame(BWAPI::UnitTypes::Protoss_Nexus) + 360 &&
+	if (enemyMainFirstSeen > 0 &&
+		BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 320 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Forge) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 1 &&
-		BWAPI::Broodwar->enemy()->incompleteUnitCount(BWAPI::UnitTypes::Protoss_Nexus) == 0)
+		snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) == 1)
 	{
 		_openingPlan = OpeningPlan::ProxyGateway;
 		_planIsFixed = true;
