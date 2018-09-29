@@ -42,6 +42,7 @@ namespace Config
         extern bool FoundMapSpecificStrategy;
         extern bool TrainingMode;
 		extern bool EnemyScoutNotRush;
+		extern bool EnemyStealGas;
     }
 
     namespace BWAPIOptions

@@ -785,7 +785,8 @@ void InformationManager::updateEnemyStatInfo()
 {
 	if (BWAPI::Broodwar->getFrameCount() < 16 * 8 * 60)
 	{
-		int enemyInOurMain1 = 0, enemyInOurMain2 = 0;
+		Config::Strategy::EnemyStealGas = false;
+		int enemyInOurMain1 = 0, enemyInOurMain2 = 0, gasInOurMain = 0;
 		auto mainArea = BWEM::Map::Instance().GetArea(BWAPI::Broodwar->self()->getStartLocation());
 
 		for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
@@ -793,6 +794,8 @@ void InformationManager::updateEnemyStatInfo()
 				if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)ui.second.lastPosition) == mainArea)
 					if (ui.second.type == BWAPI::UnitTypes::Terran_Bunker || ui.second.type == BWAPI::UnitTypes::Protoss_Photon_Cannon || ui.second.type == BWAPI::UnitTypes::Zerg_Sunken_Colony)
 						enemyInOurMain1++;
+					else if (ui.second.type.isRefinery())
+						gasInOurMain++;
 
 		int workerInOurMain = 0;
 		for (auto & unit : BWAPI::Broodwar->enemy()->getUnits())
@@ -805,6 +808,8 @@ void InformationManager::updateEnemyStatInfo()
 		// less worker, no staitc, must be lure
 		if (workerInOurMain <= 2 && enemyInOurMain1 + enemyInOurMain2 == 0)
 			Config::Strategy::EnemyScoutNotRush = true;
+		if (gasInOurMain > 0)
+			Config::Strategy::EnemyStealGas = true;
 	}
 	if (BWAPI::Broodwar->getFrameCount() > 16 * 8 * 60)
 	{

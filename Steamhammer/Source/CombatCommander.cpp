@@ -1415,8 +1415,10 @@ void CombatCommander::updateDefenseSquadUnits(Squad & defenseSquad, const size_t
 			groundDefendersAdded += 4;
 		else
 			groundDefendersAdded += 5;
-		// if enemy scout, we just use dragoon defend
-		if (!Config::Strategy::EnemyScoutNotRush || defenderToAdd->getType() != BWAPI::UnitTypes::Protoss_Zealot)
+		// if enemy scout and no gas steal, we just use dragoon defend
+		if (!Config::Strategy::EnemyScoutNotRush ||
+			(Config::Strategy::EnemyStealGas && Config::Strategy::StrategyName != "Proxy9-9Gate") ||
+			defenderToAdd->getType() != BWAPI::UnitTypes::Protoss_Zealot)
 			_squadData.assignUnitToSquad(defenderToAdd, defenseSquad);
 	}
 

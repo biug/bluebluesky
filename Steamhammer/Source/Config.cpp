@@ -39,6 +39,7 @@ namespace Config
         bool FoundMapSpecificStrategy       = false;
         bool TrainingMode                   = false;
 		bool EnemyScoutNotRush				= false;
+		bool EnemyStealGas					= false;
     }
 
     namespace BotInfo
