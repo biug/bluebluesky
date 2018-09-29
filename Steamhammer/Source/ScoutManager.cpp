@@ -345,6 +345,31 @@ void ScoutManager::update()
 					}
 				}
 			}
+			else if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Gateway) == 0 && BWAPI::Broodwar->getFrameCount() < 10000)
+			{
+				auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation();
+				if (enemyNatural)
+				{
+					const auto & enemyNaturalArea = BWEM::Map::Instance().GetArea(enemyNatural->getTilePosition());
+					if (!enemyNaturalArea->Bases().empty())
+					{
+						const auto & basePos = enemyNaturalArea->Bases()[0].Center();
+						int xx = 0, yy = 0, cc = 0;
+						for (const auto & mineral : enemyNaturalArea->Bases()[0].Minerals())
+						{
+							xx += mineral->Pos().x;
+							yy += mineral->Pos().y;
+							cc += 1;
+						}
+						auto mineralPos = BWAPI::Position(xx / cc, yy / cc);
+						if (!enemyNaturalArea->Bases()[0].Geysers().empty())
+							mineralPos = (BWAPI::Position)enemyNaturalArea->Bases()[0].Geysers()[0]->TopLeft();
+
+						_enemyMainFirstSeen = BWAPI::Broodwar->getFrameCount();
+						InformationManager::Instance().getLocutusUnit(_workerScout).moveTo(mineralPos);
+					}
+				}
+			}
 			else
 			{
 				moveGroundScout(_workerScout);
