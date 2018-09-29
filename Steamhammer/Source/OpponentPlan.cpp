@@ -140,17 +140,29 @@ void OpponentPlan::recognize()
 	// Recognize proxy gateway
 	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Pylon) < 3000)
 	{
+		const auto & mainArea = BWEM::Map::Instance().GetArea(InformationManager::Instance().getMyMainBaseLocation()->getTilePosition());
+		const BWEM::Area * enemyArea = mainArea;
+		const BWEM::Area * enemyNatural = mainArea;
+		if (InformationManager::Instance().getEnemyMainBaseLocation())
+		{
+			enemyArea = BWEM::Map::Instance().GetArea(InformationManager::Instance().getEnemyMainBaseLocation()->getTilePosition());
+		}
+		if (InformationManager::Instance().getEnemyNaturalBaseLocation())
+		{
+			enemyNatural = BWEM::Map::Instance().GetArea(InformationManager::Instance().getEnemyNaturalBaseLocation()->getTilePosition());
+		}
 		for (const auto & unit : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
 		{
 			if (unit.second.type == BWAPI::UnitTypes::Protoss_Pylon || unit.second.type == BWAPI::UnitTypes::Protoss_Gateway)
 			{
 				bool buildInAnyBase = false;
+				const auto & unitArea = BWEM::Map::Instance().GetArea((BWAPI::TilePosition)unit.second.lastPosition);
 				for (const auto & base : BWTA::getBaseLocations())
 					// skip natural base, if in natural base, maybe a proxy
 					if (base != InformationManager::Instance().getMyNaturalLocation())
 					{
 						// if in any base, mark as a normal pylon/gateway
-						if (base->getPosition().getApproxDistance(unit.second.lastPosition) < 12 * 32)
+						if (base->getPosition().getApproxDistance(unit.second.lastPosition) < 12 * 32 || unitArea == mainArea || unitArea == enemyArea || unitArea == enemyNatural)
 							buildInAnyBase = true;
 						else
 							for (const auto & choke : BWEM::Map::Instance().GetArea(base->getTilePosition())->ChokePoints())
@@ -160,6 +172,7 @@ void OpponentPlan::recognize()
 				// not a normal building, maybe proxy
 				if (!buildInAnyBase)
 				{
+					BWAPI::Broodwar->drawCircleMap(unit.second.lastPosition, 16, BWAPI::Colors::Red, true);
 					_openingPlan = OpeningPlan::ProxyGateway;
 					_planIsFixed = true;
 					WorkerManager::Instance().setCollectGas(false);
@@ -171,11 +184,11 @@ void OpponentPlan::recognize()
 	int enemyMainFirstSeen = ScoutManager::Instance().enemyMainFirstSeen();
 	// if found enemy base for a while, but no gateway, one or no pylon, maybe a proxy
 	if (enemyMainFirstSeen > 0 &&
-		BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 320 &&
+		BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 300 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Forge) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) == 0 &&
-		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 1 &&
+		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 2 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) == 1)
 	{
 		_openingPlan = OpeningPlan::ProxyGateway;

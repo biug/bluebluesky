@@ -28,6 +28,7 @@ ScoutManager::ScoutManager()
 	, _enemyBaseLastSeen(0)
 	, _pylonHarassState(PylonHarassStates::Initial)
 	, _enemyMainFirstSeen(0)
+	, _needScoutNatural(false)
 {
 	setScoutTargets();
 	_firstScoutPoint.push_back(std::make_pair(BWAPI::Positions::None, false));
@@ -344,8 +345,19 @@ void ScoutManager::update()
 						break;
 					}
 				}
+				// if found last point
+				if (_firstScoutPoint.rbegin()->second)
+				{
+					int numNexus = InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Nexus, BWAPI::Broodwar->enemy());
+					int numPylon = InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Pylon, BWAPI::Broodwar->enemy());
+					int numGateway = InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Gateway, BWAPI::Broodwar->enemy());
+					if (numNexus == 1 && numPylon <= 2 && numPylon > 0 && numGateway == 0)
+					{
+						_needScoutNatural = true;
+					}
+				}
 			}
-			else if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Gateway) == 0 && BWAPI::Broodwar->getFrameCount() < 10000)
+			else if (_needScoutNatural && BWAPI::Broodwar->self()->supplyUsed() <= 32)
 			{
 				auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation();
 				if (enemyNatural)
