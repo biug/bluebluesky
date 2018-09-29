@@ -145,13 +145,12 @@ void OpponentPlan::recognize()
 			if (unit.second.type == BWAPI::UnitTypes::Protoss_Pylon || unit.second.type == BWAPI::UnitTypes::Protoss_Gateway)
 			{
 				bool buildInAnyBase = false;
-				auto buildArea = BWEM::Map::Instance().GetArea((BWAPI::TilePosition)unit.second.lastPosition);
 				for (const auto & base : BWTA::getBaseLocations())
 					// skip natural base, if in natural base, maybe a proxy
 					if (base != InformationManager::Instance().getMyNaturalLocation())
 					{
 						// if in any base, mark as a normal pylon/gateway
-						if (buildArea == BWEM::Map::Instance().GetArea(base->getTilePosition()))
+						if (base->getPosition().getApproxDistance(unit.second.lastPosition) < 12 * 32)
 							buildInAnyBase = true;
 						else
 							for (const auto & choke : BWEM::Map::Instance().GetArea(base->getTilePosition())->ChokePoints())
