@@ -153,9 +153,9 @@ void ScoutManager::update()
 						cc += 1;
 					}
 					const auto & mineralPos = BWAPI::Position(xx / cc, yy / cc);
-					_firstScoutPoint[0].first = geyserPos;
-					_firstScoutPoint[1].first = basePos * 2 - mineralPos;
 					_firstScoutPoint[2].first = basePos * 2 - geyserPos;
+					_firstScoutPoint[1].first = basePos * 2 - mineralPos;
+					_firstScoutPoint[0].first = geyserPos;
 				}
 			}
 		}
@@ -198,6 +198,10 @@ void ScoutManager::update()
         OpponentModel::Instance().getRecommendGasSteal() &&
         BWAPI::Broodwar->enemy()->getRace() != BWAPI::Races::Zerg &&
         Config::Strategy::StrategyName != "PlasmaProxy2Gate")
+	{
+		_tryGasSteal = true;
+	}
+	if (Config::Strategy::EnemyStealGas)
 	{
 		_tryGasSteal = true;
 	}
