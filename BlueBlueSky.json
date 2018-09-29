@@ -126,16 +126,15 @@
 			
 		"CounterStrategies" :
 		{
-			"Counter Proxy" : "9-9GateDefensive",
+			"Counter Proxy vP" : "Turtle",
+			"Counter Proxy vT" : "9-9GateDefensive",
+			"Counter Proxy vZ" : "9-9GateDefensive",
 			"Counter Worker rush" : "9-9GateDefensive",
 			"Counter Fast rush vT" : { "Protoss" : [
 				{ "Weight" : 60, "Strategy" : "9-9GateDefensive" },
 				{ "Weight" : 40, "Strategy" : "Turtle" }
 			]},
-			"Counter Fast rush vP" : { "Protoss" : [
-				{ "Weight" : 60, "Strategy" : "9-9GateDefensive" },
-				{ "Weight" : 40, "Strategy" : "Turtle" }
-			]},
+			"Counter Fast rush vP" : "Turtle",
 			"Counter Fast rush vZ" : { "Protoss" : [
 				{ "Weight" : 60, "Strategy" : "ForgeExpandSpeedlots" },
 				{ "Weight" : 40, "Strategy" : "ForgeExpand5GateGoon" }
@@ -146,7 +145,7 @@
 				{ "Weight" : 40, "Strategy" : "Turtle" }
 			]},			
 			"Counter Heavy rush vP" : { "Protoss" : [
-				{ "Weight" : 50, "Strategy" : "4GateGoon" },
+				{ "Weight" : 50, "Strategy" : "4GateGoonvP" },
 				{ "Weight" : 50, "Strategy" : "Turtle" }
 			]}			
 		},
@@ -184,8 +183,6 @@
 		"UseEnemySpecificStrategy" : true,
         "EnemySpecificStrategy" :
         {
-			
-			"locutusprevious": "4GateGoon",
 			"UAlbertaBot": "TurtleShrink",
 			"PurpleWave": { "Protoss" : [
 				{ "Weight" : 90, "Strategy" : "ForgeExpand5GateGoon" },
