@@ -988,6 +988,99 @@ int EnsureCannonsAtBase(BWTA::BaseLocation * base, int cannons, BuildOrderQueue 
     return count + (queuedPylon ? 1 : 0);
 }
 
+int EnsureCannonsAtChoke(BWTA::BaseLocation * base, int cannons, BuildOrderQueue & queue)
+{
+	if (cannons <= 0 || !base) return 0;
+
+	// Get the BWEB Station for the base
+	const BWEB::Station* station = bwebMap.getClosestStation(base->getTilePosition());
+	if (!station) return 0;
+
+	// If we have anything in the building or production queue for the station's defensive locations, we've already handled this base
+	for (auto tile : station->DefenseLocations())
+	{
+		if (IsInBuildingOrProductionQueue(tile, queue)) return 0;
+	}
+
+	// Reduce desired cannons based on what we already have in the base
+	BWAPI::Position basePosition = base->getPosition();
+	int desiredCannons = cannons - queue.numInQueue(BWAPI::UnitTypes::Protoss_Photon_Cannon) - BuildingManager::Instance().numBeingBuilt(BWAPI::UnitTypes::Protoss_Photon_Cannon);
+	for (const auto unit : BWAPI::Broodwar->self()->getUnits())
+		if (unit->getType() == BWAPI::UnitTypes::Protoss_Photon_Cannon &&
+			BWEM::Map::Instance().GetArea(base->getTilePosition()) == BWEM::Map::Instance().GetArea(unit->getTilePosition()))
+		{
+			desiredCannons--;
+		}
+	if (desiredCannons <= 0) return 0;
+
+	// Ensure we have a forge
+	QueueUrgentItem(BWAPI::UnitTypes::Protoss_Forge, queue);
+	if (UnitUtil::GetCompletedUnitCount(BWAPI::UnitTypes::Protoss_Forge) < 1) return 0;
+
+	// Collect the available defensive locations
+	std::set<BWAPI::TilePosition> poweredAvailableLocations;
+	std::set<BWAPI::TilePosition> unpoweredAvailableLocations;
+	for (auto tile : station->DefenseLocations())
+	{
+		if (!bwebMap.isPlaceable(BWAPI::UnitTypes::Protoss_Photon_Cannon, tile)) continue;
+
+		if (BWAPI::Broodwar->hasPower(tile, BWAPI::UnitTypes::Protoss_Photon_Cannon))
+			poweredAvailableLocations.insert(tile);
+		else
+			unpoweredAvailableLocations.insert(tile);
+	}
+
+	// If there are no available locations, we can't do anything
+	if (poweredAvailableLocations.empty() && unpoweredAvailableLocations.empty()) return 0;
+
+	// If there are not enough powered locations, build a pylon at the corner position
+	bool queuedPylon = false;
+	if (poweredAvailableLocations.size() < desiredCannons)
+	{
+		// The corner position is the one that matches every position on either X or Y coordinate
+		BWAPI::TilePosition cornerTile = BWAPI::TilePositions::Invalid;
+		for (auto t1 : station->DefenseLocations())
+		{
+			bool matches = true;
+			for (auto t2 : station->DefenseLocations())
+			{
+				if (t1.x != t2.x && t1.y != t2.y)
+				{
+					matches = false;
+					break;
+				}
+			}
+
+			if (matches)
+			{
+				cornerTile = t1;
+				break;
+			}
+		}
+
+		// Build the pylon if the tile is available
+		if (cornerTile.isValid() && bwebMap.isPlaceable(BWAPI::UnitTypes::Protoss_Pylon, cornerTile))
+		{
+			// Queue the pylon
+			MacroAct pylon(BWAPI::UnitTypes::Protoss_Pylon);
+			pylon.setReservedPosition(cornerTile);
+			queue.queueAsHighestPriority(pylon);
+			queuedPylon = true;
+
+			// Don't use this tile for a cannon
+			poweredAvailableLocations.erase(cornerTile);
+		}
+	}
+
+	// Queue the cannons
+	MacroAct cannon(BWAPI::UnitTypes::Protoss_Photon_Cannon, MacroLocation::ChokeGuard);
+
+	// queue one once a time
+	queue.queueAsHighestPriority(cannon);
+
+	return 1;
+}
+
 void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
 {
 	// If proxy-gate opening, never handle urgent
@@ -1020,10 +1113,12 @@ void StrategyManager::handleUrgentProductionIssues(BuildOrderQueue & queue)
 		}
 	}
 	//If enemy uses ProxyGateway,ensure at least 2 cannons at base
-	if (enemyPlan == OpeningPlan::ProxyGateway && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) < 5 && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon) < 4 && BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dark_Templar) < 1)
+	if (enemyPlan == OpeningPlan::ProxyGateway && UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) < 5 && UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Dragoon) < 4 && UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Dark_Templar) < 1)
 	{
-		int needMoreCannon = BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Zealot) + BWAPI::Broodwar->enemy()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon) - BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Zealot) - BWAPI::Broodwar->self()->allUnitCount(BWAPI::UnitTypes::Protoss_Dragoon);
-		EnsureCannonsAtBase(InformationManager::Instance().getMyMainBaseLocation(), 2 + needMoreCannon/3, queue);
+		PlayerSnapshot snapEnemy;
+		snapEnemy.takeEnemy();
+		int needMoreCannon = snapEnemy.getCount(BWAPI::UnitTypes::Protoss_Zealot) + snapEnemy.getCount(BWAPI::UnitTypes::Protoss_Dragoon) - UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Zealot) - UnitUtil::GetAllUnitCount(BWAPI::UnitTypes::Protoss_Dragoon);
+		EnsureCannonsAtChoke(InformationManager::Instance().getMyMainBaseLocation(), 2 + needMoreCannon/3, queue);
 	}
 	// If enemy use DTOpening, ensure make an observer
 	if (enemyPlan == OpeningPlan::DTOpening)

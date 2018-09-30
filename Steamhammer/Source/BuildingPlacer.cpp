@@ -737,11 +737,11 @@ BWAPI::TilePosition BuildingPlacer::placeBuildingBWEB(BWAPI::UnitType type, BWAP
 	{
 		auto myMain = InformationManager::Instance().getMyMainBaseLocation();
 		auto myNatural = InformationManager::Instance().getMyNaturalLocation();
-		BWAPI::Position firstCannonCenter = BWAPI::Positions::None;
+		std::vector<BWAPI::Position> cannonCenters;
 		for (const auto & unit : BWAPI::Broodwar->self()->getUnits())
 			if (unit && unit->getType() == BWAPI::UnitTypes::Protoss_Photon_Cannon)
-				firstCannonCenter = unit->getPosition();
-		if (myMain && myNatural)
+				cannonCenters.push_back(BWAPI::Position(unit->getTilePosition().x * 32 + 16, unit->getTilePosition().y * 32 + 16));
+		if (myMain && myNatural && !cannonCenters.empty())
 		{
 			// virtual building
 			Building b;
@@ -757,13 +757,16 @@ BWAPI::TilePosition BuildingPlacer::placeBuildingBWEB(BWAPI::UnitType type, BWAP
 				for (int xx = myArea->TopLeft().x; xx <= myArea->BottomRight().x; ++xx)
 					for (int yy = myArea->TopLeft().y; yy <= myArea->BottomRight().y; ++yy)
 					{
-						BWAPI::TilePosition tile(xx, yy);
-						BWAPI::TilePosition chokeTile = BWAPI::TilePosition(pChoke->second->front().Center());
-						if (InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::Broodwar->self()) == 1)
+						// must in any cannon
+						bool inAnyCannon = false;
+						for (const auto & center : cannonCenters)
 						{
 							BWAPI::Position pos(xx * 32 + 16, yy * 32 + 16);
-							if (pos.getApproxDistance(firstCannonCenter) > 180) continue;
+							if (pos.getApproxDistance(center) < 32 * 6) inAnyCannon = true;
 						}
+						if (!inAnyCannon) continue;
+						BWAPI::TilePosition tile(xx, yy);
+						BWAPI::TilePosition chokeTile = BWAPI::TilePosition(pChoke->second->front().Center());
 						if (myArea == BWEM::Map::Instance().GetArea(tile))
 							if (bwebMap.isPlaceable(type, tile) && BuildingPlacer::Instance().canBuildHere(tile, b))
 								if (bestTile == BWAPI::TilePositions::None ||
