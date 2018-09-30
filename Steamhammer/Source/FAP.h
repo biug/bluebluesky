@@ -49,6 +49,7 @@ namespace BlueBlueSky {
             mutable int score = 0;
 
             mutable int attackCooldownRemaining = 0;
+			mutable int isCloaked = 0;
 
             bool operator<(const FAPUnit &other) const;
         };

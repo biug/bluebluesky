@@ -118,6 +118,7 @@ namespace BlueBlueSky {
     void FastAPproximation::dealDamage(const FastAPproximation::FAPUnit &fu,
         int damage,
         BWAPI::DamageType damageType) const {
+		if (fu.isCloaked) return;
         damage <<= 8;
         int remainingShields = fu.shields - damage + (fu.shieldArmor << 8);
         if (remainingShields > 0) {
@@ -520,9 +521,9 @@ namespace BlueBlueSky {
         unitType(ui.type),
         isOrganic(ui.type.isOrganic()),
         score(ui.type.destroyScore()),
+		isCloaked(ui.player == BWAPI::Broodwar->self() && ui.unit && ui.unit->exists() && ui.unit->isCloaked() && !ui.unit->isDetected()),
         player(ui.player)
     {
-
         static int nextId = 0;
         id = nextId++;
 
@@ -633,6 +634,7 @@ namespace BlueBlueSky {
         didHealThisFrame = other.didHealThisFrame;
         elevation = other.elevation;
         player = other.player;
+		isCloaked = other.isCloaked;
 
         return *this;
     }

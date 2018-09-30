@@ -62,6 +62,7 @@ class InformationManager
     std::map<BWAPI::UnitType, int> enemyUnitCooldown;
     std::map<BWAPI::UnitType, double> enemyUnitTopSpeed;
     std::map<BWAPI::UnitType, int> enemyUnitArmor;
+	std::map<BWTA::BaseLocation*, int> enemyBaseStaticNum;
 
 	InformationManager();
 
@@ -91,6 +92,7 @@ class InformationManager
 	void					updateGoneFromLastPosition();
     void                    updateBullets();
 	void					updateEnemyStatInfo();
+	void					updateEnemyBaseStatic();
 
     void                    detectEnemyWall(BWAPI::Unit unit);
     void                    detectBrokenEnemyWall(BWAPI::UnitType type, BWAPI::TilePosition tile);
@@ -121,6 +123,7 @@ public:
     bool                    isEnemyWallBuilding(BWAPI::Unit unit);
     bool                    isBehindEnemyWall(BWAPI::Unit attacker, BWAPI::Unit target);
     bool                    isBehindEnemyWall(BWAPI::TilePosition tile);
+	bool					isEnemyBaseHasStatic(BWTA::BaseLocation* base);
 
     const UIMap &           getUnitInfo(BWAPI::Player player) const;
 
@@ -146,6 +149,7 @@ public:
 	int						getNumFreeLandBases();
 	int						getMyNumMineralPatches();
 	int						getMyNumGeysers();
+	int						getNumEnemyBaseStatic(BWTA::BaseLocation* base);
 	void					getMyGasCounts(int & nRefineries, int & nFreeGeysers);
 
 	bool					getEnemyProxy() { return _enemyProxy; };
@@ -171,7 +175,6 @@ public:
 	bool					enemyHasMobileDetection();
 	bool					enemyHasSiegeTech();
     bool                    enemyHasInfantryRangeUpgrade();
-	bool					enemyBaseHasDetection(BWTA::BaseLocation* base);
 
     int                     getWeaponDamage(BWAPI::Player player, BWAPI::WeaponType wpn);
     int                     getWeaponRange(BWAPI::Player player, BWAPI::WeaponType wpn);

@@ -365,15 +365,40 @@ bool Squad::needsToRegroup()
 	{
         // All other checks are done. Finally do the expensive combat simulation.
         int score = runCombatSim(_order.getPosition());
+		BWAPI::Broodwar->drawTextScreen(250, 350, "%c%d", white, score);
 
 		retreat = score < 0;
 		_lastRetreatSwitch = BWAPI::Broodwar->getFrameCount();
 		_lastRetreatSwitchVal = retreat;
 	}
+
+	// 如果是dt开局，对方二矿有防御
+	// 1.大部队足够接近对方二矿路口
+	// 2.隐刀数量不少于2
+	// 3.龙骑数量不少于4
+	if (Config::Strategy::StrategyName == "2GateDTvP" && InformationManager::Instance().isEnemyBaseHasStatic(InformationManager::Instance().getEnemyNaturalBaseLocation()))
+	{
+		auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation();
+		int nearDT = 0, nearDragoon = 0, nearXX = 0;
+		for (const auto & unit : BWAPI::Broodwar->self()->getUnits())
+		{
+			if (unit->isCompleted() && unit->getPosition().getApproxDistance(enemyNatural->getPosition()) < 40 * 32)
+			{
+				if (unit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar) ++nearDT;
+				if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) ++nearDragoon;
+				if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) ++nearXX;
+			}
+		}
+		BWAPI::Broodwar->drawTextMap(200, 330, "dt = %d, goon = %d, xx = %d", nearDT, nearDragoon, nearXX);
+		if (nearDT >= 1 && nearDT + nearDragoon >= 6)
+			if (nearDT + nearDragoon + nearXX >= InformationManager::Instance().getNumEnemyBaseStatic(InformationManager::Instance().getEnemyNaturalBaseLocation()) * 2)
+				retreat = false;
+	}
 	
 	if (retreat)
 	{
-		_regroupStatus = std::string("Retreat");
+		int score = runCombatSim(_order.getPosition());
+		_regroupStatus = std::string("Retreat ") + std::to_string(score);
 	}
 	else
 	{

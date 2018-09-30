@@ -277,6 +277,7 @@ void InformationManager::update()
 	updateGoneFromLastPosition();
     updateBullets();
 	updateEnemyStatInfo();
+	updateEnemyBaseStatic();
 
     // Output unit info for debugging micro
     return;
@@ -1312,6 +1313,18 @@ void InformationManager::getMyGasCounts(int & nRefineries, int & nFreeGeysers)
 	nFreeGeysers = geysers;
 }
 
+bool InformationManager::isEnemyBaseHasStatic(BWTA::BaseLocation* base)
+{
+	if (enemyBaseStaticNum.find(base) == enemyBaseStaticNum.end()) return false;
+	return enemyBaseStaticNum[base] > 0;
+}
+
+int InformationManager::getNumEnemyBaseStatic(BWTA::BaseLocation* base)
+{
+	if (enemyBaseStaticNum.find(base) == enemyBaseStaticNum.end()) return 0;
+	return enemyBaseStaticNum[base];
+}
+
 int InformationManager::getAir2GroundSupply(BWAPI::Player player) const
 {
 	int supply = 0;
@@ -2214,15 +2227,21 @@ bool InformationManager::enemyHasInfantryRangeUpgrade()
 	return false;
 }
 
-bool InformationManager::enemyBaseHasDetection(BWTA::BaseLocation* base)
+void InformationManager::updateEnemyBaseStatic()
 {
-	if (!base) return false;
-	auto enemyMainPos = base->getPosition();
+	enemyBaseStaticNum.clear();
+	for (auto enemyBase : getEnemyBases())
+		enemyBaseStaticNum[enemyBase] = 0;
+
 	for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
 		if (ui.second.type.isBuilding() && ui.second.type.isDetector() && !ui.second.goneFromLastPosition && ui.second.completed)
-			if (enemyMainPos.getApproxDistance(ui.second.lastPosition) < 368)
-				return true;
-	return false;
+			for (auto enemyBase : getEnemyBases())
+				if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)ui.second.lastPosition)
+					== BWEM::Map::Instance().GetArea(enemyBase->getTilePosition()))
+					enemyBaseStaticNum[enemyBase] += 1;
+				else for (const auto & choke : BWEM::Map::Instance().GetArea(enemyBase->getTilePosition())->ChokePoints())
+					if (ui.second.lastPosition.getApproxDistance((BWAPI::Position)choke->Center()) < 2 * 32)
+						enemyBaseStaticNum[enemyBase] += 1;
 }
 
 int InformationManager::getWeaponDamage(BWAPI::Player player, BWAPI::WeaponType wpn)

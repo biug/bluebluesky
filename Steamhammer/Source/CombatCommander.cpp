@@ -278,6 +278,7 @@ void CombatCommander::updateHarassSquads()
     // Collect active squads with the base they are harassing
     auto enemyBases = InformationManager::Instance().getEnemyBases();
     std::vector<std::pair<Squad*, BWTA::BaseLocation*>> activeSquads;
+
     for (BWTA::Region * region : BWTA::getRegions())
     {
         BWAPI::Position regionCenter = region->getCenter();
@@ -291,8 +292,11 @@ void CombatCommander::updateHarassSquads()
         for (auto & potentialBase : InformationManager::Instance().getEnemyBases())
             if (potentialBase->getRegion() == region)
 				// no detection in base
-				if (!InformationManager::Instance().enemyBaseHasDetection(potentialBase))
+				if (!InformationManager::Instance().isEnemyBaseHasStatic(potentialBase))
 				{
+					// if enemy main base safe, make sure natural is safe
+					if (base == InformationManager::Instance().getEnemyMainBaseLocation()
+						&& !InformationManager::Instance().isEnemyBaseHasStatic(InformationManager::Instance().getEnemyNaturalBaseLocation()))
 					base = potentialBase;
 					break;
 				}
