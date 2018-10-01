@@ -521,7 +521,7 @@ namespace BlueBlueSky {
         unitType(ui.type),
         isOrganic(ui.type.isOrganic()),
         score(ui.type.destroyScore()),
-		isCloaked(ui.player == BWAPI::Broodwar->self() && ui.unit && ui.unit->exists() && ui.unit->isCloaked() && !ui.unit->isDetected()),
+		isCloaked(ui.player == BWAPI::Broodwar->self() && ui.unit && ui.unit->exists() && ui.unit->isCloaked()),
         player(ui.player)
     {
         static int nextId = 0;
@@ -600,6 +600,12 @@ namespace BlueBlueSky {
             groundCooldown /= 2;
             airCooldown /= 2;
         }
+
+		if (isCloaked)
+		{
+			if (InformationManager::Instance().isInAnyDetector(ui.lastPosition))
+				isCloaked = false;
+		}
 
         elevation = BWAPI::Broodwar->getGroundHeight(BWAPI::TilePosition(ui.lastPosition));
 

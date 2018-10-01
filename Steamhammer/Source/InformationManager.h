@@ -63,6 +63,7 @@ class InformationManager
     std::map<BWAPI::UnitType, double> enemyUnitTopSpeed;
     std::map<BWAPI::UnitType, int> enemyUnitArmor;
 	std::map<BWTA::BaseLocation*, int> enemyBaseStaticNum;
+	std::set<BWAPI::Position> enemyStatics;
 
 	InformationManager();
 
@@ -124,6 +125,7 @@ public:
     bool                    isBehindEnemyWall(BWAPI::Unit attacker, BWAPI::Unit target);
     bool                    isBehindEnemyWall(BWAPI::TilePosition tile);
 	bool					isEnemyBaseHasStatic(BWTA::BaseLocation* base);
+	bool					isInAnyDetector(BWAPI::Position pos);
 
     const UIMap &           getUnitInfo(BWAPI::Player player) const;
 

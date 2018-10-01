@@ -95,6 +95,20 @@ bool MicroManager::shouldIgnoreTarget(BWAPI::Unit combatUnit, BWAPI::Unit target
 {
     if (!combatUnit || !target) return true;
 
+	if (combatUnit->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar)
+	{
+		bool inAnyArea = false;
+		const auto & combatArea = BWEM::Map::Instance().GetArea(combatUnit->getTilePosition());
+		for (const auto & area : BWEM::Map::Instance().Areas())
+			if (!area.Bases().empty())
+				if (combatArea == &area)
+				{
+					inAnyArea = true;
+					break;
+				}
+		if (!inAnyArea) return false;
+	}
+
     // Check if this unit is currently performing a run-by of a bunker
     // If so, ignore all targets while we are doing the run-by
     auto bunkerRunBySquad = CombatCommander::Instance().getSquadData().getSquad(this).getBunkerRunBySquad(combatUnit);

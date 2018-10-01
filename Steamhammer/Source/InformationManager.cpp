@@ -1319,6 +1319,14 @@ bool InformationManager::isEnemyBaseHasStatic(BWTA::BaseLocation* base)
 	return enemyBaseStaticNum[base] > 0;
 }
 
+bool InformationManager::isInAnyDetector(BWAPI::Position pos)
+{
+	if (!pos.isValid()) return false;
+	for (const auto & enemy : enemyStatics)
+		if (enemy.getApproxDistance(pos) < 11 * 32 + 8) return true;
+	return false;
+}
+
 int InformationManager::getNumEnemyBaseStatic(BWTA::BaseLocation* base)
 {
 	if (enemyBaseStaticNum.find(base) == enemyBaseStaticNum.end()) return 0;
@@ -2229,19 +2237,24 @@ bool InformationManager::enemyHasInfantryRangeUpgrade()
 
 void InformationManager::updateEnemyBaseStatic()
 {
+	enemyStatics.clear();
 	enemyBaseStaticNum.clear();
-	for (auto enemyBase : getEnemyBases())
+	for (auto enemyBase : BWTA::getBaseLocations())
 		enemyBaseStaticNum[enemyBase] = 0;
 
 	for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
 		if (ui.second.type.isBuilding() && ui.second.type.isDetector() && !ui.second.goneFromLastPosition && ui.second.completed)
-			for (auto enemyBase : getEnemyBases())
+			for (auto enemyBase : BWTA::getBaseLocations())
 				if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)ui.second.lastPosition)
 					== BWEM::Map::Instance().GetArea(enemyBase->getTilePosition()))
 					enemyBaseStaticNum[enemyBase] += 1;
 				else for (const auto & choke : BWEM::Map::Instance().GetArea(enemyBase->getTilePosition())->ChokePoints())
 					if (ui.second.lastPosition.getApproxDistance((BWAPI::Position)choke->Center()) < 2 * 32)
 						enemyBaseStaticNum[enemyBase] += 1;
+
+	for (auto const & ui : InformationManager::Instance().getUnitData(BWAPI::Broodwar->enemy()).getUnits())
+		if (ui.second.type.isDetector() && ui.second.completed)
+			enemyStatics.insert(ui.second.lastPosition + BWAPI::Position(ui.second.type.tileSize().x * 16, ui.second.type.tileSize().y * 16));
 }
 
 int InformationManager::getWeaponDamage(BWAPI::Player player, BWAPI::WeaponType wpn)

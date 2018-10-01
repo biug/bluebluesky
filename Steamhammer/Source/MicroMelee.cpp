@@ -174,7 +174,7 @@ BWAPI::Unit MicroMelee::getTarget(BWAPI::Unit meleeUnit, const BWAPI::Unitset & 
 			meleeUnit->getDistance(order.getPosition()) - target->getDistance(order.getPosition());
 
 		// Skip targets that are too far away to worry about.
-		if (range >= 13 * 32)
+		if (range >= 13 * 32 && meleeUnit->getType() != BWAPI::UnitTypes::Protoss_Dark_Templar)
 		{
 			continue;
 		}
