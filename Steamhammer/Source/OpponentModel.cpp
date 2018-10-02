@@ -987,6 +987,10 @@ void OpponentModel::setPylonHarassObservation(PylonHarassBehaviour observation)
 
 bool OpponentModel::expectCloakedCombatUnitsSoon()
 {
+	if (getEnemyPlan() == OpeningPlan::Turtle || getEnemyPlan() == OpeningPlan::NakedExpand)
+		if (BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Protoss)
+			return false;
+
 	return _worstCaseExpectedCloakTech < (
         BWAPI::Broodwar->getFrameCount() + 
         BWAPI::UnitTypes::Protoss_Observer.buildTime() +
