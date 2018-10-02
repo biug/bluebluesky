@@ -114,8 +114,8 @@ void OpponentPlan::recognize()
 	// Recognize worker rushes.
 	if (frame < 3000 && recognizeWorkerRush())
 	{
-		_openingPlan = OpeningPlan::WorkerRush;
-		return;
+	_openingPlan = OpeningPlan::WorkerRush;
+	return;
 	}
 
 	PlayerSnapshot snap;
@@ -125,7 +125,7 @@ void OpponentPlan::recognize()
 	if (snap.getFrame(BWAPI::UnitTypes::Zerg_Spawning_Pool) < 1600 ||
 		snap.getFrame(BWAPI::UnitTypes::Zerg_Zergling) < 3200 ||
 		snap.getFrame(BWAPI::UnitTypes::Terran_Barracks) < 1400 ||
-		snap.getFrame(BWAPI::UnitTypes::Terran_Marine) < 3000 )
+		snap.getFrame(BWAPI::UnitTypes::Terran_Marine) < 3000)
 	{
 		_openingPlan = OpeningPlan::FastRush;
 		_planIsFixed = true;
@@ -136,7 +136,7 @@ void OpponentPlan::recognize()
 	{
 		return;
 	}
-	
+
 	// Recognize proxy gateway
 	if (snap.getFrame(BWAPI::UnitTypes::Protoss_Pylon) < 3000)
 	{
@@ -204,6 +204,37 @@ void OpponentPlan::recognize()
 		_planIsFixed = true;
 		WorkerManager::Instance().setCollectGas(true);
 		return;
+	}
+
+	// if naked, or bf expand, record it
+	if (BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Protoss)
+	{
+		bool isBFExpand = false;
+		// two nexus, one pylon and no gateway, must be naked
+		if (snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) >= 2 && snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0)
+			isBFExpand = true;
+		if (snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 2)
+		{
+			// gateway and a pylon must in natural
+			if (auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation())
+			{
+				int inNatural = 0;
+				auto naturalArea = BWEM::Map::Instance().GetArea(enemyNatural->getTilePosition());
+				for (const auto & enemy : InformationManager::Instance().getUnitInfo(BWAPI::Broodwar->enemy()))
+					if (enemy.second.type == BWAPI::UnitTypes::Protoss_Gateway || enemy.second.type == BWAPI::UnitTypes::Protoss_Pylon)
+						if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)enemy.second.lastPosition) == naturalArea)
+							inNatural++;
+				if (inNatural >= 2)
+					isBFExpand = true;
+			}
+		}
+		if (isBFExpand)
+		{
+			BWAPI::Broodwar->sendText("bf expand");
+			_openingPlan = OpeningPlan::BFExpand;
+			_planIsFixed = true;
+			return;
+		}
 	}
 
     // When we know the enemy is not doing a fast plan, set it
