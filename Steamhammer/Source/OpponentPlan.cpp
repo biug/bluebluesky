@@ -172,7 +172,7 @@ void OpponentPlan::recognize()
 				// not a normal building, maybe proxy
 				if (!buildInAnyBase)
 				{
-					BWAPI::Broodwar->drawCircleMap(unit.second.lastPosition, 16, BWAPI::Colors::Red, true);
+					BWAPI::Broodwar->sendText("proxy gateway 1");
 					_openingPlan = OpeningPlan::ProxyGateway;
 					_planIsFixed = true;
 					WorkerManager::Instance().setCollectGas(false);
@@ -184,13 +184,14 @@ void OpponentPlan::recognize()
 	int enemyMainFirstSeen = ScoutManager::Instance().enemyMainFirstSeen();
 	// if found enemy base for a while, but no gateway, one or no pylon, maybe a proxy
 	if (enemyMainFirstSeen > 0 &&
-		BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 300 &&
+		BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 200 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Forge) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) == 0 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 2 &&
 		snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) == 1)
 	{
+		BWAPI::Broodwar->sendText("proxy gateway 2");
 		_openingPlan = OpeningPlan::ProxyGateway;
 		_planIsFixed = true;
 		WorkerManager::Instance().setCollectGas(false);
@@ -206,35 +207,43 @@ void OpponentPlan::recognize()
 		return;
 	}
 
-	// if naked, or bf expand, record it
-	if (BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Protoss)
-	{
-		bool isBFExpand = false;
-		// two nexus, one pylon and no gateway, must be naked
-		if (snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) >= 2 && snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 0)
-			isBFExpand = true;
-		if (snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) == 1 && snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 2)
+	// turtle must have early bf and bc
+	if (((enemyMainFirstSeen > 0 && BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 200) || enemyMainFirstSeen == 0)
+		&& snap.getCount(BWAPI::UnitTypes::Protoss_Forge) + snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) >= 1)
+		if (auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation())
 		{
-			// gateway and a pylon must in natural
-			if (auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation())
+			int inNatural = 0;
+			auto naturalArea = BWEM::Map::Instance().GetArea(enemyNatural->getTilePosition());
+			for (const auto & enemy : InformationManager::Instance().getUnitInfo(BWAPI::Broodwar->enemy()))
+				if (enemy.second.type == BWAPI::UnitTypes::Protoss_Forge || enemy.second.type == BWAPI::UnitTypes::Protoss_Photon_Cannon)
+					// if bf/bc in natural area
+					if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)enemy.second.lastPosition) == naturalArea)
+						inNatural++;
+					else
+						for (const auto & choke : naturalArea->ChokePoints())
+							if (enemy.second.lastPosition.getApproxDistance((BWAPI::Position)choke->Center()) < 64)
+								inNatural++;
+			if (inNatural > 0)
 			{
-				int inNatural = 0;
-				auto naturalArea = BWEM::Map::Instance().GetArea(enemyNatural->getTilePosition());
-				for (const auto & enemy : InformationManager::Instance().getUnitInfo(BWAPI::Broodwar->enemy()))
-					if (enemy.second.type == BWAPI::UnitTypes::Protoss_Gateway || enemy.second.type == BWAPI::UnitTypes::Protoss_Pylon)
-						if (BWEM::Map::Instance().GetArea((BWAPI::TilePosition)enemy.second.lastPosition) == naturalArea)
-							inNatural++;
-				if (inNatural >= 2)
-					isBFExpand = true;
+				BWAPI::Broodwar->sendText("turtle");
+				_openingPlan = OpeningPlan::Turtle;
+				_planIsFixed = true;
+				return;
 			}
 		}
-		if (isBFExpand)
-		{
-			BWAPI::Broodwar->sendText("bf expand");
-			_openingPlan = OpeningPlan::BFExpand;
-			_planIsFixed = true;
-			return;
-		}
+
+	// two nexus very early is naked
+	if (((enemyMainFirstSeen > 0 && BWAPI::Broodwar->getFrameCount() > enemyMainFirstSeen + 200) || enemyMainFirstSeen == 0)
+		&& snap.getCount(BWAPI::UnitTypes::Protoss_Nexus) >= 2
+		&& snap.getCount(BWAPI::UnitTypes::Protoss_Pylon) <= 3
+		&& snap.getCount(BWAPI::UnitTypes::Protoss_Gateway) <= 2
+		&& snap.getCount(BWAPI::UnitTypes::Protoss_Forge) == 0
+		&& snap.getCount(BWAPI::UnitTypes::Protoss_Cybernetics_Core) == 0)
+	{
+		BWAPI::Broodwar->sendText("naked expand");
+		_openingPlan = OpeningPlan::NakedExpand;
+		_planIsFixed = true;
+		return;
 	}
 
     // When we know the enemy is not doing a fast plan, set it
@@ -298,40 +307,6 @@ void OpponentPlan::recognize()
 	{
 		_openingPlan = OpeningPlan::Factory;
 		return;
-	}
-
-	// Recognize expansions with pre-placed static defense.
-	// Zerg can't do this.
-	// NOTE Incomplete test! We don't check the location of the static defense
-	if (InformationManager::Instance().getNumBases(BWAPI::Broodwar->enemy()) >= 2)
-	{
-		if (snap.getCount(BWAPI::UnitTypes::Terran_Bunker) > 0 ||
-			snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) > 0)
-		{
-			_openingPlan = OpeningPlan::SafeExpand;
-			return;
-		}
-	}
-
-	// Recognize a naked expansion.
-	// This has to run after the SafeExpand check, since it doesn't check for what's missing.
-	if (InformationManager::Instance().getNumBases(BWAPI::Broodwar->enemy()) >= 2)
-	{
-		_openingPlan = OpeningPlan::NakedExpand;
-		return;
-	}
-
-	// Recognize a turtling enemy.
-	// NOTE Incomplete test! We don't check where the defenses are placed.
-	if (InformationManager::Instance().getNumBases(BWAPI::Broodwar->enemy()) < 2)
-	{
-		if (snap.getCount(BWAPI::UnitTypes::Terran_Bunker) >= 2 ||
-			snap.getCount(BWAPI::UnitTypes::Protoss_Photon_Cannon) >= 2 ||
-			snap.getCount(BWAPI::UnitTypes::Zerg_Sunken_Colony) >= 2)
-		{
-			_openingPlan = OpeningPlan::Turtle;
-			return;
-		}
 	}
 
 	// Nothing recognized: Opening plan remains unchanged.

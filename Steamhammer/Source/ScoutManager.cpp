@@ -139,7 +139,7 @@ void ScoutManager::update()
 			const auto & distToEnemyBase = _workerScout->getTilePosition().getApproxDistance(enemyBase->getTilePosition());
 			
 			// must in same area
-			if (distToEnemyBase <= 12)
+			if (distToEnemyBase <= 10)
 			{
 				_enemyMainFirstSeen = BWAPI::Broodwar->getFrameCount();
 				if (!enemyArea->Bases().empty() && !enemyArea->Bases()[0].Geysers().empty())
@@ -337,7 +337,7 @@ void ScoutManager::update()
 					{
 						InformationManager::Instance().getLocutusUnit(_workerScout).moveTo(point.first);
 						if (_workerScout->getPosition().getApproxDistance(point.first) < 64 ||
-							BWAPI::Broodwar->getFrameCount() - _enemyMainFirstSeen > 300)
+							BWAPI::Broodwar->getFrameCount() - _enemyMainFirstSeen > 160)
 						{
 							point.second = true;
 							_enemyMainFirstSeen = BWAPI::Broodwar->getFrameCount();
@@ -350,14 +350,16 @@ void ScoutManager::update()
 				{
 					int numNexus = InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Nexus, BWAPI::Broodwar->enemy());
 					int numPylon = InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Pylon, BWAPI::Broodwar->enemy());
-					int numGateway = InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Gateway, BWAPI::Broodwar->enemy());
-					if (numNexus == 1 && numPylon <= 2 && numPylon > 0 && numGateway == 0)
+					if (numNexus == 1 && numPylon <= 2 && numPylon > 0)
 					{
 						_needScoutNatural = true;
 					}
 				}
 			}
-			else if (_needScoutNatural && BWAPI::Broodwar->self()->supplyUsed() <= 32)
+			else if (_needScoutNatural
+				&& BWAPI::Broodwar->self()->gatheredMinerals() < 1200
+				&& InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Forge, BWAPI::Broodwar->enemy()) == 0
+				&& InformationManager::Instance().getNumUnits(BWAPI::UnitTypes::Protoss_Nexus, BWAPI::Broodwar->enemy()) < 2)
 			{
 				auto enemyNatural = InformationManager::Instance().getEnemyNaturalBaseLocation();
 				if (enemyNatural)
@@ -373,10 +375,9 @@ void ScoutManager::update()
 							yy += mineral->Pos().y;
 							cc += 1;
 						}
-						auto mineralPos = BWAPI::Position(xx / cc, yy / cc);
-						if (!enemyNaturalArea->Bases()[0].Geysers().empty())
-							mineralPos = (BWAPI::Position)enemyNaturalArea->Bases()[0].Geysers()[0]->TopLeft();
+						auto mineralPos = enemyNaturalArea->Bases()[0].Center() * 2 - BWAPI::Position(xx / cc, yy / cc);
 
+						// if no gateway, don't update main base time
 						_enemyMainFirstSeen = BWAPI::Broodwar->getFrameCount();
 						InformationManager::Instance().getLocutusUnit(_workerScout).moveTo(mineralPos);
 					}
