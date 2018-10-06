@@ -21,6 +21,7 @@ enum class OpeningPlan
 	, ProxyGateway  // 2 or more gateways in the field
 	, DTOpening
 	, MassDragoon   // 3 or more gateways, 1 nexus, dragoon rush=
+	, HiddenDT
 	};
 
 const std::vector< std::pair<OpeningPlan, std::string> > PlanNames =
@@ -38,7 +39,8 @@ const std::vector< std::pair<OpeningPlan, std::string> > PlanNames =
 	std::pair<OpeningPlan, std::string>(OpeningPlan::Turtle, "Turtle"),
 	std::pair<OpeningPlan, std::string>(OpeningPlan::ProxyGateway, "ProxyGateway"),
 	std::pair<OpeningPlan, std::string>(OpeningPlan::DTOpening, "DTOpening"),
-	std::pair<OpeningPlan, std::string>(OpeningPlan::MassDragoon, "MassDragoon")
+	std::pair<OpeningPlan, std::string>(OpeningPlan::MassDragoon, "MassDragoon"),
+	std::pair<OpeningPlan, std::string>(OpeningPlan::HiddenDT, "HiddenDT")
 };
 
 // Turn an opening plan into a string.

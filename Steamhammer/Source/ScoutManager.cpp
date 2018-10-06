@@ -10,9 +10,9 @@
 
 using namespace BlueBlueSky;
 
-ScoutManager::ScoutManager() 
+ScoutManager::ScoutManager()
 	: _overlordScout(nullptr)
-    , _workerScout(nullptr)
+	, _workerScout(nullptr)
 	, _scoutStatus("None")
 	, _gasStealStatus("None")
 	, _scoutCommand(MacroCommandType::None)
@@ -20,15 +20,16 @@ ScoutManager::ScoutManager()
 	, _scoutUnderAttack(false)
 	, _tryGasSteal(false)
 	, _enemyGeyser(nullptr)
-    , _startedGasSteal(false)
+	, _startedGasSteal(false)
 	, _queuedGasSteal(false)
 	, _gasStealOver(false)
-    , _currentRegionVertexIndex(-1)
-    , _previousScoutHP(0)
+	, _currentRegionVertexIndex(-1)
+	, _previousScoutHP(0)
 	, _enemyBaseLastSeen(0)
 	, _pylonHarassState(PylonHarassStates::Initial)
 	, _enemyMainFirstSeen(0)
 	, _needScoutNatural(false)
+	, _needScoutHidden(false)
 {
 	setScoutTargets();
 	_firstScoutPoint.push_back(std::make_pair(BWAPI::Positions::None, false));

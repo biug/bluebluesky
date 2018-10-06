@@ -56,6 +56,7 @@ class ScoutManager
 	int								_enemyBaseLastSeen;
 	int								_enemyMainFirstSeen;
 	bool							_needScoutNatural;
+	bool							_needScoutHidden;
 	std::vector<std::pair<BWAPI::Position, bool>> _firstScoutPoint;
 
 	PylonHarassStates				_pylonHarassState;
